@@ -5,6 +5,9 @@ from flask import Flask, render_template, send_from_directory, jsonify, request
 from shutil import copyfile
 from threading import Lock
 
+# Server startup timestamp - will change every time the server restarts/redeploys
+SERVER_START_TIME = int(time.time())
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_key_for_testing")
 
@@ -52,7 +55,8 @@ def get_counters():
             'game_of_thrones': {
                 'total': counters['game_of_thrones']['total'],
                 'per_second': got_recent
-            }
+            },
+            'server_start_time': SERVER_START_TIME  # Add server start time to response
         })
 
 @app.route('/api/increment/<show>', methods=['POST'])
