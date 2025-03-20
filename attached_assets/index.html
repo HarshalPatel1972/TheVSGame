@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breaking Bad vs Game of Thrones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <svg class="vs-text" viewBox="0 0 100 40">
+                    <text x="50" y="25" text-anchor="middle" class="vs-text">VS</text>
+                </svg>
+                <div class="logo-container">
+                    <svg class="bb-logo" viewBox="0 0 200 60">
+                        <text x="10" y="40" class="logo-text bb-text">Br</text>
+                        <text x="70" y="40" class="logo-text bb-text">Ba</text>
+                        <rect x="45" y="15" width="20" height="30" class="periodic-box"/>
+                        <text x="48" y="35" class="element-number">35</text>
+                        <rect x="105" y="15" width="20" height="30" class="periodic-box"/>
+                        <text x="108" y="35" class="element-number">56</text>
+                    </svg>
+                    <svg class="got-logo" viewBox="0 0 200 60">
+                        <path d="M10,30 L190,30" class="got-text-path"/>
+                        <text>
+                            <textPath href="#got-path" class="got-text">GAME OF THRONES</textPath>
+                        </text>
+                    </svg>
+                </div>
+            </div>
+        </header>
+
+        <main class="game-container">
+            <!-- Sliding background -->
+            <div class="background-slider">
+                <div class="slider-part bb-background"></div>
+                <div class="slider-part got-background"></div>
+            </div>
+
+            <!-- Fixed content -->
+            <div class="side breaking-bad">
+                <div class="side-content">
+                    <div class="character-container">
+                        <svg class="heisenberg" viewBox="0 0 100 100">
+                            <path d="M50 10 C40 30, 30 40, 20 60 L80 60 C70 40, 60 30, 50 10" fill="#FFD700"/>
+                            <rect x="35" y="30" width="30" height="10" fill="#000"/>
+                            <rect x="20" y="40" width="60" height="5" fill="#000"/>
+                        </svg>
+                    </div>
+                    <button class="increment-btn bb-btn" id="bbBtn">+1 Breaking Bad</button>
+                    <div class="counter-container">
+                        <div class="points" id="bbPoints">0</div>
+                        <div class="points-per-second" id="bbPPS">0 points per second</div>
+                        <div class="personal-score">You've scored <span id="bbPersonal">0</span> points for Breaking Bad</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side got">
+                <div class="side-content">
+                    <div class="character-container">
+                        <svg class="dragon" viewBox="0 0 100 100">
+                            <path d="M20 50 Q30 20 50 10 Q70 20 80 50 Q60 40 50 45 Q40 40 20 50" fill="#A0B1C5"/>
+                            <path d="M45 45 Q50 40 55 45 L50 50 Z" fill="#2A5A8A"/>
+                        </svg>
+                    </div>
+                    <button class="increment-btn got-btn" id="gotBtn">+1 Game of Thrones</button>
+                    <div class="counter-container">
+                        <div class="points" id="gotPoints">0</div>
+                        <div class="points-per-second" id="gotPPS">0 points per second</div>
+                        <div class="personal-score">You've scored <span id="gotPersonal">0</span> points for Game of Thrones</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/counter.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

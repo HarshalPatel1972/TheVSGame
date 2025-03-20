@@ -1,0 +1,476 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Game+of+Thrones&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Audiowide&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap");
+
+:root {
+  --transition-time: 0.5s;
+  --bb-green: #07582f;
+  --bb-yellow: #ffd700;
+  --got-blue: #2a5a8a;
+  --got-red: #8b0000;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  color: white;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.winner-status {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 15px;
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+  z-index: 3;
+  letter-spacing: 1px;
+}
+
+.game-container {
+  flex: 1;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.background-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+}
+
+.bb-background {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("/static/images/Breaking BAD.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  clip-path: inset(0 50% 0 0);
+  transition: clip-path var(--transition-time) cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.got-background {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("/static/images/GOT.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  clip-path: inset(0 0 0 50%);
+  transition: clip-path var(--transition-time) cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.vs-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+}
+
+.vs-text {
+  font-size: 8em;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 20px rgba(255, 255, 255, 0.3), 0 0 30px rgba(255, 255, 255, 0.2);
+  animation: vsGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes vsGlow {
+  from {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+      0 0 20px rgba(255, 255, 255, 0.3), 0 0 30px rgba(255, 255, 255, 0.2);
+    transform: scale(1);
+  }
+  to {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.7),
+      0 0 30px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+  }
+}
+
+.side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.side-content {
+  text-align: center;
+  padding: 30px;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.increment-btn {
+  padding: 15px 30px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+  font-weight: bold;
+}
+
+.bb-btn {
+  background: linear-gradient(135deg, var(--bb-green), var(--bb-yellow));
+  color: white;
+  border: 2px solid var(--bb-yellow);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 15px rgba(7, 88, 47, 0.5);
+}
+
+.got-btn {
+  background: linear-gradient(135deg, var(--got-blue), var(--got-red));
+  color: white;
+  border: 2px solid var(--got-red);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+  font-family: "Game of Thrones", serif;
+}
+
+.increment-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.2);
+}
+
+.increment-btn:active {
+  transform: scale(0.95) translateY(0);
+}
+
+.counter-container {
+  font-size: 1.2em;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.points {
+  font-size: 3.2em;
+  font-weight: bold;
+  margin: 10px 0;
+  background: linear-gradient(to right, #ff00cc, #3333ff, #00ffff, #ff00cc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 300% 100%;
+  font-family: "Impact", fantasy;
+  text-shadow: 0 0 10px rgba(255, 0, 204, 0.8), 0 0 20px rgba(255, 0, 204, 0.5),
+    0 2px 0 #000, 0 3px 0 #000;
+  letter-spacing: 3px;
+  animation: gradient-shift 3s ease infinite,
+    pulse 2s ease-in-out infinite alternate,
+    glow 1.5s ease-in-out infinite alternate;
+  transform-style: preserve-3d;
+  perspective: 500px;
+}
+
+.breaking-bad .points {
+  font-size: 3.2em;
+  font-weight: bold;
+  margin: 10px 0;
+  color: var(--bb-yellow);
+  font-family: "Courier New", monospace;
+  text-shadow: 0 0 15px rgba(7, 88, 47, 0.9), 0 0 30px rgba(7, 88, 47, 0.5);
+  letter-spacing: 2px;
+  border: 3px solid var(--bb-green);
+  background-color: rgba(7, 88, 47, 0.7);
+  padding: 5px 15px;
+  border-radius: 5px;
+  position: relative;
+  display: inline-block;
+}
+
+.breaking-bad .points::before {
+  content: "Br";
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  font-size: 0.4em;
+  background-color: var(--bb-green);
+  color: white;
+  padding: 5px;
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.got .points {
+  font-size: 3.2em;
+  font-weight: bold;
+  margin: 10px 0;
+  color: #d4af37; /* Gold */
+  font-family: "Game of Thrones", serif;
+  text-shadow: 0 0 15px rgba(139, 0, 0, 0.8), 0 0 30px rgba(139, 0, 0, 0.5);
+  letter-spacing: 2px;
+  position: relative;
+  display: inline-block;
+  padding: 10px 20px;
+  border-top: 2px solid #963634;
+  border-bottom: 2px solid #963634;
+}
+
+.got .points::before,
+.got .points::after {
+  content: "†";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7em;
+  color: #963634;
+}
+
+.got .points::before {
+  left: -20px;
+}
+
+.got .points::after {
+  right: -20px;
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes glow {
+  0% {
+    filter: brightness(0.8);
+  }
+  100% {
+    filter: brightness(1.2);
+  }
+}
+
+.points-per-second {
+  font-size: 1.6em;
+  background: linear-gradient(to right, #00ffff, #0099ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-family: "Orbitron", sans-serif;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 153, 255, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+  margin: 15px 0;
+  letter-spacing: 1.5px;
+  font-weight: bold;
+  animation: shimmer 3s infinite linear;
+  transform: skewX(-5deg);
+}
+
+.breaking-bad .points-per-second {
+  font-size: 1.5em;
+  color: #d4af37;
+  font-family: "Cinzel", serif;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
+  margin: 15px 0;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.breaking-bad .points-per-second::before {
+  content: "❄";
+  margin-right: 8px;
+  font-size: 0.8em;
+  color: var(--bb-green);
+  text-shadow: 0 0 10px rgba(7, 88, 47, 0.8);
+}
+
+.breaking-bad .points-per-second::after {
+  content: "🔥";
+  margin-left: 8px;
+  font-size: 0.8em;
+  text-shadow: 0 0 10px rgba(7, 88, 47, 0.8);
+}
+
+.got .points-per-second {
+  font-size: 1.5em;
+  color: #d4af37;
+  font-family: "Cinzel", serif;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
+  margin: 15px 0;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.got .points-per-second::before {
+  content: "❄";
+  margin-right: 8px;
+  font-size: 0.8em;
+  color: var(--got-blue);
+  text-shadow: 0 0 10px rgba(42, 90, 138, 0.8);
+}
+
+.got .points-per-second::after {
+  content: "🔥";
+  margin-left: 8px;
+  font-size: 0.8em;
+  text-shadow: 0 0 10px rgba(139, 0, 0, 0.8);
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+.personal-score {
+  font-size: 1.5em;
+  margin-top: 15px;
+  background: linear-gradient(to right, #adff2f, #ffff00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-family: "Audiowide", cursive;
+  text-shadow: 0 0 15px rgba(173, 255, 47, 0.7),
+    0 0 25px rgba(173, 255, 47, 0.4), 0 1px 2px rgba(0, 0, 0, 0.8);
+  letter-spacing: 1px;
+  font-weight: bold;
+  transform: perspective(500px) rotateX(5deg);
+  animation: float 4s ease-in-out infinite;
+}
+
+.breaking-bad .personal-score {
+  font-size: 1.3em;
+  color: #d4af37;
+  font-family: "Cinzel", serif;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(
+    to right,
+    rgba(7, 88, 47, 0.3),
+    rgba(255, 215, 0, 0.3)
+  );
+  border-radius: 3px;
+  padding: 5px 15px;
+  display: inline-block;
+}
+
+.got .personal-score {
+  font-size: 1.3em;
+  color: #d4af37;
+  font-family: "Cinzel", serif;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(
+    to right,
+    rgba(42, 90, 138, 0.3),
+    rgba(139, 0, 0, 0.3)
+  );
+  border-radius: 3px;
+  padding: 5px 15px;
+  display: inline-block;
+}
+
+@keyframes float {
+  0% {
+    transform: perspective(500px) rotateX(5deg) translateY(0px);
+  }
+  50% {
+    transform: perspective(500px) rotateX(5deg) translateY(-5px);
+  }
+  100% {
+    transform: perspective(500px) rotateX(5deg) translateY(0px);
+  }
+}
+
+.floating-point {
+  position: fixed;
+  pointer-events: none;
+  animation: floatUp 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  font-weight: bold;
+  font-size: 1.2em;
+  z-index: 1000;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7), 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-25px) scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-50px) scale(1);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-container {
+    flex-direction: column;
+  }
+
+  .side {
+    height: 50vh;
+  }
+
+  .bb-background,
+  .got-background {
+    height: 100%;
+    clip-path: inset(0 0 50% 0);
+  }
+
+  .vs-text {
+    font-size: 4em;
+  }
+}
