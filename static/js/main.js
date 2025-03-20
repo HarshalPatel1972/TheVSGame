@@ -26,21 +26,43 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateBackgroundWidths() {
     const totalSpeed =
       bbCounter.incrementPerSecond + gotCounter.incrementPerSecond;
-    if (totalSpeed === 0) {
-      bbBackground.style.clipPath = "inset(0 50% 0 0)";
-      gotBackground.style.clipPath = "inset(0 0 0 50%)";
-      return;
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      // For mobile: top-bottom split instead of left-right
+      if (totalSpeed === 0) {
+        bbBackground.style.clipPath = "inset(0 0 50% 0)";
+        gotBackground.style.clipPath = "inset(50% 0 0 0)";
+        return;
+      }
+
+      const bbPercentage = (bbCounter.incrementPerSecond / totalSpeed) * 100;
+      const gotPercentage = 100 - bbPercentage;
+
+      // Ensure minimum height of 15% for each side
+      const bbHeight = bbPercentage === 0 ? 0 : Math.max(15, bbPercentage);
+      const gotHeight = gotPercentage === 0 ? 0 : Math.max(15, gotPercentage);
+
+      bbBackground.style.clipPath = `inset(0 0 ${100 - bbHeight}% 0)`;
+      gotBackground.style.clipPath = `inset(${bbHeight}% 0 0 0)`;
+    } else {
+      // Desktop: left-right split (existing code)
+      if (totalSpeed === 0) {
+        bbBackground.style.clipPath = "inset(0 50% 0 0)";
+        gotBackground.style.clipPath = "inset(0 0 0 50%)";
+        return;
+      }
+
+      const bbPercentage = (bbCounter.incrementPerSecond / totalSpeed) * 100;
+      const gotPercentage = 100 - bbPercentage;
+
+      // Ensure minimum width of 15% only when both have some votes
+      const bbWidth = bbPercentage === 0 ? 0 : Math.max(15, bbPercentage);
+      const gotWidth = gotPercentage === 0 ? 0 : Math.max(15, gotPercentage);
+
+      bbBackground.style.clipPath = `inset(0 ${100 - bbWidth}% 0 0)`;
+      gotBackground.style.clipPath = `inset(0 0 0 ${100 - gotWidth}%)`;
     }
-
-    const bbPercentage = (bbCounter.incrementPerSecond / totalSpeed) * 100;
-    const gotPercentage = 100 - bbPercentage;
-
-    // Ensure minimum width of 15% only when both have some votes
-    const bbWidth = bbPercentage === 0 ? 0 : Math.max(15, bbPercentage);
-    const gotWidth = gotPercentage === 0 ? 0 : Math.max(15, gotPercentage);
-
-    bbBackground.style.clipPath = `inset(0 ${100 - bbWidth}% 0 0)`;
-    gotBackground.style.clipPath = `inset(0 0 0 ${100 - gotWidth}%)`;
   }
 
   function updateWinnerStatus() {
@@ -113,4 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Update display every second with fresh data from server
   setInterval(fetchCounters, 1000);
+
+  // Add window resize listener to update layout when orientation changes
+  window.addEventListener("resize", updateDisplay);
 });

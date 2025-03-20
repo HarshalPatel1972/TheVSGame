@@ -467,10 +467,128 @@ body {
   .bb-background,
   .got-background {
     height: 100%;
+    width: 100%;
+  }
+
+  /* Adjust clip paths for mobile view */
+  .bb-background {
     clip-path: inset(0 0 50% 0);
+  }
+
+  .got-background {
+    clip-path: inset(50% 0 0 0);
   }
 
   .vs-text {
     font-size: 4em;
+  }
+
+  .winner-status {
+    font-size: 1.2em;
+    padding: 10px 5px;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .vs-text {
+    font-size: 3em;
+  }
+
+  .winner-status {
+    font-size: 1em;
+    padding: 8px 5px;
+  }
+
+  .increment-btn {
+    padding: 10px 15px;
+    font-size: 1em;
+    margin: 10px 0;
+  }
+
+  .breaking-bad .points,
+  .got .points {
+    font-size: 2.5em;
+    padding: 5px 10px;
+  }
+
+  .breaking-bad .points::before {
+    top: -10px;
+    left: -10px;
+  }
+
+  .breaking-bad .points-per-second,
+  .got .points-per-second {
+    font-size: 1.2em;
+  }
+
+  .breaking-bad .personal-score,
+  .got .personal-score {
+    font-size: 1em;
+    padding: 3px 8px;
+  }
+
+  .side-content {
+    padding: 15px 10px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .vs-text {
+    font-size: 2.5em;
+  }
+
+  .breaking-bad .points,
+  .got .points {
+    font-size: 2em;
+  }
+
+  .increment-btn {
+    padding: 8px 12px;
+    font-size: 0.9em;
+  }
+
+  .breaking-bad .points-per-second,
+  .got .points-per-second {
+    font-size: 1em;
+  }
+
+  .breaking-bad .personal-score,
+  .got .personal-score {
+    font-size: 0.9em;
+  }
+
+  /* Adjust the VS text position */
+  .vs-container {
+    z-index: 5; /* Increase z-index to ensure visibility */
+  }
+}
+
+/* Fix for background transitions in mobile view */
+@media (max-width: 768px) {
+  .background-slider {
+    flex-direction: column;
+  }
+
+  /* Override the JS-controlled clip-path for mobile when needed */
+  @keyframes updateMobileClipPath {
+    to {
+      clip-path: var(--mobile-clip-path, inherit);
+    }
+  }
+
+  /* Fixed height for button containers to prevent overflow */
+  .counter-container {
+    height: auto;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Improve touch targets for mobile */
+  .increment-btn {
+    min-height: 44px; /* Minimum touch target size */
   }
 }
