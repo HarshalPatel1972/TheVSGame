@@ -1,31 +1,51 @@
 class Counter {
-    constructor(name) {
-        this.name = name;
-        this.value = parseInt(localStorage.getItem(`${name}_total`) || '0');
-        this.incrementPerSecond = 0;
-        this.personalScore = parseInt(localStorage.getItem(`${name}_personal`) || '0');
-        this.clickTimes = [];
-    }
+  constructor(name) {
+    this.name = name;
+    this.value = 0;
+    this.incrementPerSecond = 0;
+    // Only personal score remains in localStorage
+    this.personalScore = parseInt(
+      localStorage.getItem(`${name}_personal`) || "0"
+    );
+  }
 
-    increment() {
-        this.value++;
+  async increment() {
+    try {
+      const response = await fetch(`/api/increment/${this.name}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.value = data.total;
+
+        // Update personal score in localStorage
         this.personalScore++;
-        this.clickTimes.push(Date.now());
-        // Only keep clicks from the last second
-        const now = Date.now();
-        this.clickTimes = this.clickTimes.filter(time => now - time <= 1000);
-        localStorage.setItem(`${this.name}_total`, this.value);
         localStorage.setItem(`${this.name}_personal`, this.personalScore);
-    }
 
-    calculateSpeed() {
-        const now = Date.now();
-        // Count clicks in the last second
-        this.clickTimes = this.clickTimes.filter(time => now - time <= 1000);
-        this.incrementPerSecond = this.clickTimes.length;
+        return true;
+      } else {
+        console.error("Failed to increment counter");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error incrementing counter:", error);
+      return false;
     }
+  }
 
-    formatNumber(num) {
-        return new Intl.NumberFormat().format(Math.floor(num));
+  // This method is now only used to update from API data
+  updateFromApiData(data) {
+    if (data && data[this.name]) {
+      this.value = data[this.name].total;
+      this.incrementPerSecond = data[this.name].per_second;
     }
+  }
+
+  formatNumber(num) {
+    return new Intl.NumberFormat().format(Math.floor(num));
+  }
 }

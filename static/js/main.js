@@ -59,9 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateDisplay() {
-    bbCounter.calculateSpeed();
-    gotCounter.calculateSpeed();
-
     bbPoints.textContent = bbCounter.formatNumber(bbCounter.value);
     gotPoints.textContent = gotCounter.formatNumber(gotCounter.value);
     bbPPS.textContent = `${bbCounter.formatNumber(
@@ -79,22 +76,41 @@ document.addEventListener("DOMContentLoaded", () => {
     updateWinnerStatus();
   }
 
+  // Fetch updated counters from server
+  async function fetchCounters() {
+    try {
+      const response = await fetch("/api/counters");
+      if (response.ok) {
+        const data = await response.json();
+        bbCounter.updateFromApiData(data);
+        gotCounter.updateFromApiData(data);
+        updateDisplay();
+      }
+    } catch (error) {
+      console.error("Error fetching counters:", error);
+    }
+  }
+
   // Add click handlers
-  document.getElementById("bbBtn").addEventListener("click", (e) => {
-    bbCounter.increment();
-    createFloatingPoint(e.clientX, e.clientY);
-    updateDisplay();
+  document.getElementById("bbBtn").addEventListener("click", async (e) => {
+    const success = await bbCounter.increment();
+    if (success) {
+      createFloatingPoint(e.clientX, e.clientY);
+      updateDisplay();
+    }
   });
 
-  document.getElementById("gotBtn").addEventListener("click", (e) => {
-    gotCounter.increment();
-    createFloatingPoint(e.clientX, e.clientY);
-    updateDisplay();
+  document.getElementById("gotBtn").addEventListener("click", async (e) => {
+    const success = await gotCounter.increment();
+    if (success) {
+      createFloatingPoint(e.clientX, e.clientY);
+      updateDisplay();
+    }
   });
 
-  // Update display every 100ms
-  setInterval(updateDisplay, 100);
+  // Initial fetch and display
+  fetchCounters();
 
-  // Initial display update
-  updateDisplay();
+  // Update display every second with fresh data from server
+  setInterval(fetchCounters, 1000);
 });
