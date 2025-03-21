@@ -25,6 +25,9 @@ counters = {
 }
 counter_lock = Lock()  # To prevent race conditions
 
+# Add a reset timestamp to track when counters were last reset
+LAST_RESET_TIME = int(time.time())
+
 # Load saved counters if they exist
 def load_counters():
     try:
@@ -88,7 +91,8 @@ def get_counters():
             'game_of_thrones': {
                 'total': counters['game_of_thrones']['total'],
                 'per_second': got_recent
-            }
+            },
+            'last_reset_time': LAST_RESET_TIME  # Add reset timestamp to response
         })
 
 @app.route('/api/increment/<show>', methods=['POST'])
@@ -112,6 +116,8 @@ def increment_counter(show):
 @app.route('/api/reset', methods=['POST'])
 def reset_counters():
     """Reset all counters (admin functionality)"""
+    global LAST_RESET_TIME  # Access the global variable
+    
     try:
         data = request.get_json()
         if not data or 'code' not in data:
@@ -129,10 +135,17 @@ def reset_counters():
                 counters[show]['total'] = 0
                 counters[show]['clicks'] = []
             
+            # Update the reset timestamp
+            LAST_RESET_TIME = int(time.time())
+            
             # Save the reset state to persistent storage
             save_counters()
             
-            return jsonify({'success': True, 'message': 'All counters have been reset'})
+            return jsonify({
+                'success': True, 
+                'message': 'All counters have been reset',
+                'last_reset_time': LAST_RESET_TIME
+            })
             
     except Exception as e:
         app.logger.error(f"Error in reset endpoint: {e}")

@@ -654,10 +654,10 @@ body {
   }
 }
 
-/* Reset button styles */
+/* Reset button styles - move from top to bottom */
 .reset-button {
   position: fixed;
-  top: 15px;
+  bottom: 15px; /* Changed from top to bottom */
   right: 15px;
   background-color: rgba(0, 0, 0, 0.5);
   color: white;
@@ -767,7 +767,7 @@ body {
 /* Mobile adjustments for reset button and modal */
 @media (max-width: 768px) {
   .reset-button {
-    top: 10px;
+    bottom: 10px; /* Changed from top to bottom */
     right: 10px;
     padding: 5px 10px;
     font-size: 0.8em;
