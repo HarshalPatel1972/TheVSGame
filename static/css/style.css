@@ -676,6 +676,32 @@ body {
   transform: scale(1.05);
 }
 
+/* Feedback button styles - next to reset button */
+.feedback-button {
+  position: fixed;
+  bottom: 15px;
+  right: 90px; /* Position it to the left of the reset button */
+  background-color: rgba(37, 211, 102, 0.7); /* WhatsApp green color */
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  padding: 8px 15px;
+  font-size: 0.9em;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-button:hover {
+  background-color: rgba(37, 211, 102, 0.9);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.05);
+}
+
 /* Authentication modal */
 .auth-modal {
   display: none;
@@ -845,6 +871,13 @@ body {
   .reset-button {
     bottom: 10px; /* Changed from top to bottom */
     right: 10px;
+    padding: 5px 10px;
+    font-size: 0.8em;
+  }
+
+  .feedback-button {
+    bottom: 10px;
+    right: 75px;
     padding: 5px 10px;
     font-size: 0.8em;
   }

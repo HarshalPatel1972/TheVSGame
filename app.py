@@ -172,15 +172,16 @@ def get_random_image(show_type):
     if show_type not in ['breaking_bad', 'game_of_thrones']:
         return jsonify({'error': 'Invalid show type'}), 400
     
-    image_dir = os.path.join('static', 'images', show_type)
+    image_dir = os.path.join('static', 'images')
     
     # Check if directory exists
     if not os.path.exists(image_dir):
         return jsonify({'error': f'Image directory not found: {image_dir}'}), 404
     
-    # Get all image files (jpg, jpeg, png)
+    # Get all image files matching the pattern (BB* for breaking_bad, GOT* for game_of_thrones)
+    prefix = "BB" if show_type == 'breaking_bad' else "GOT"
     image_files = [f for f in os.listdir(image_dir) 
-                  if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+                  if f.startswith(prefix) and f.lower().endswith(('.jpg', '.jpeg', '.png'))]
     
     if not image_files:
         # Fall back to default images if no custom images found
@@ -191,7 +192,7 @@ def get_random_image(show_type):
     
     # Pick a random image
     random_image = random.choice(image_files)
-    image_url = f'/static/images/{show_type}/{random_image}'
+    image_url = f'/static/images/{random_image}'
     
     return jsonify({'image_url': image_url})
 

@@ -265,10 +265,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to fetch and update images
   async function rotateImages() {
     try {
+      console.log("Rotating images...");
+
       // Fetch Breaking Bad image
       const bbResponse = await fetch("/api/images/breaking_bad");
       if (bbResponse.ok) {
         const bbData = await bbResponse.json();
+        console.log("New BB image:", bbData.image_url);
         bbBackground.style.backgroundImage = `url("${bbData.image_url}")`;
       }
 
@@ -276,6 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const gotResponse = await fetch("/api/images/game_of_thrones");
       if (gotResponse.ok) {
         const gotData = await gotResponse.json();
+        console.log("New GOT image:", gotData.image_url);
         gotBackground.style.backgroundImage = `url("${gotData.image_url}")`;
       }
 
