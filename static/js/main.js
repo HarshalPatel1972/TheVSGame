@@ -423,50 +423,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize EmailJS credentials from server
   async function initEmailJS() {
     try {
-      const response = await fetch("/api/emailjs-config");
-      if (response.ok) {
-        const config = await response.json();
+      // Directly initialize with hardcoded credentials to ensure it works
+      emailjs.init("qYOJV5V7vI8_9IQDh");
+      console.log("EmailJS initialized with hardcoded credentials");
 
-        // Check if we have all required EmailJS credentials
-        if (!config.publicKey || !config.serviceId || !config.templateId) {
-          console.error(
-            "Missing EmailJS credentials. Email functionality will not work."
-          );
-          return false;
-        }
+      // Store credentials for later use
+      window.emailjsConfig = {
+        serviceId: "service_nmu9der",
+        templateId: "template_9526hmt",
+      };
 
-        // Initialize EmailJS with the fetched public key
-        emailjs.init(config.publicKey);
-
-        // Store other credentials for later use
-        window.emailjsConfig = {
-          serviceId: config.serviceId,
-          templateId: config.templateId,
-        };
-
-        console.log("EmailJS initialized successfully with:", {
-          publicKey:
-            config.publicKey.substring(0, 3) +
-            "..." +
-            config.publicKey.substring(config.publicKey.length - 3),
-          serviceId: config.serviceId,
-          templateId: config.templateId,
-        });
-        return true;
-      } else {
-        console.error(
-          "Failed to fetch EmailJS configuration, response status:",
-          response.status
-        );
-        return false;
-      }
+      return true;
     } catch (error) {
-      console.error("Error initializing EmailJS:", error);
+      console.error("EmailJS initialization error:", error);
       return false;
     }
   }
 
-  // Call this function when the page loads
+  // Call this function immediately to ensure EmailJS is initialized
   initEmailJS();
 
   // Show feedback modal when button is clicked
@@ -564,36 +538,24 @@ document.addEventListener("DOMContentLoaded", () => {
     sendSuccess.style.display = "none";
 
     try {
-      // Check if EmailJS is properly initialized
-      if (!window.emailjsConfig) {
-        console.error("EmailJS is not properly configured");
-        throw new Error("EmailJS is not properly configured");
-      }
-
-      // Prepare template parameters
+      // Prepare template parameters - make sure these variable names match your EmailJS template
       const templateParams = {
+        to_name: "Admin",
         from_name: feedbackName.value.trim() || "Anonymous",
-        feedback_text: feedbackText.value.trim(),
+        message: feedbackText.value.trim(), // Use message not feedback_text
         reply_to: feedbackEmail.value.trim(),
-        to_email: "hp842484n@gmail.com", // Explicitly set recipient email
-        user_email: feedbackEmail.value.trim(), // Add user email as another parameter
       };
 
-      console.log(
-        "Attempting to send email with params:",
-        JSON.stringify(templateParams)
-      );
-      console.log("Using service ID:", window.emailjsConfig.serviceId);
-      console.log("Using template ID:", window.emailjsConfig.templateId);
+      console.log("Sending email with:", templateParams);
 
-      // Send the email using EmailJS with credentials from the server
+      // Use direct hardcoded values for troubleshooting
       const response = await emailjs.send(
-        window.emailjsConfig.serviceId,
-        window.emailjsConfig.templateId,
+        "service_nmu9der", // Your service ID
+        "template_9526hmt", // Your template ID
         templateParams
       );
 
-      console.log("EmailJS response:", response);
+      console.log("Email sent successfully:", response);
 
       // Also save feedback to the server
       await fetch("/api/save-feedback", {
@@ -621,8 +583,7 @@ document.addEventListener("DOMContentLoaded", () => {
         feedbackModal.style.display = "none";
       }, 3000);
     } catch (error) {
-      console.error("Error sending feedback via EmailJS:", error);
-
+      console.error("EmailJS detailed error:", error);
       // Display a more helpful error message
       sendingIndicator.style.display = "none";
       sendSuccess.style.display = "block";
