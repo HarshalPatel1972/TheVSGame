@@ -71,12 +71,42 @@ document.addEventListener("DOMContentLoaded", () => {
     const diff = Math.abs(bbTotal - gotTotal);
 
     if (bbTotal === gotTotal) {
-      winnerStatus.textContent = "It's a tie!";
+      winnerStatus.textContent = "EPIC STANDOFF! It's a tie!";
+      winnerStatus.className = "winner-status tie";
     } else {
       const leader = bbTotal > gotTotal ? "Breaking Bad" : "Game of Thrones";
-      winnerStatus.textContent = `${leader} is winning by ${bbCounter.formatNumber(
-        diff
-      )} points`;
+      const verb = [
+        "dominating",
+        "crushing",
+        "ruling",
+        "leading",
+        "conquering",
+      ][Math.floor(Math.random() * 5)];
+
+      // Different messages based on lead size
+      let message;
+      if (diff > 1000) {
+        message = `${leader} is absolutely DOMINATING with a massive ${bbCounter.formatNumber(
+          diff
+        )} point lead!`;
+      } else if (diff > 500) {
+        message = `${leader} is ${verb.toUpperCase()} the battle with ${bbCounter.formatNumber(
+          diff
+        )} points ahead!`;
+      } else if (diff > 100) {
+        message = `${leader} takes the lead by ${bbCounter.formatNumber(
+          diff
+        )} points! Can they be stopped?`;
+      } else {
+        message = `${leader} is narrowly winning by ${bbCounter.formatNumber(
+          diff
+        )} points! The battle rages on!`;
+      }
+
+      winnerStatus.textContent = message;
+      winnerStatus.className = `winner-status ${
+        bbTotal > gotTotal ? "bb-winning" : "got-winning"
+      }`;
     }
   }
 

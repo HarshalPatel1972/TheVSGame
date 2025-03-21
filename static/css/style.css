@@ -42,6 +42,42 @@ body {
   text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
   z-index: 3;
   letter-spacing: 1px;
+  transition: all 0.5s ease;
+  animation: statusPulse 2s infinite alternate;
+  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.winner-status.bb-winning {
+  background: linear-gradient(90deg, rgba(7, 88, 47, 0.6), rgba(0, 0, 0, 0.4));
+  border-bottom: 2px solid var(--bb-yellow);
+  text-shadow: 0 0 10px var(--bb-green), 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.winner-status.got-winning {
+  background: linear-gradient(90deg, rgba(139, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
+  border-bottom: 2px solid var(--got-blue);
+  text-shadow: 0 0 10px var(--got-red), 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.winner-status.tie {
+  background: linear-gradient(
+    90deg,
+    rgba(128, 0, 128, 0.6),
+    rgba(0, 0, 0, 0.4)
+  );
+  border-bottom: 2px solid gold;
+  text-shadow: 0 0 10px purple, 2px 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+@keyframes statusPulse {
+  from {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  }
 }
 
 .game-container {

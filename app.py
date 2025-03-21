@@ -3,15 +3,16 @@ import json
 import time
 from flask import Flask, render_template, send_from_directory, jsonify, request
 from shutil import copyfile
-from threading import Lock
-
-# Server startup timestamp - will change every time the server restarts/redeploys
-SERVER_START_TIME = int(time.time())
+from threading import Lock, Thread
+import atexit
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_key_for_testing")
 
-# Global counter storage
+# Path for persistent counter storage
+COUNTER_FILE = os.path.join(os.path.dirname(__file__), 'counters.json')
+
+# Global counter storage with default values
 counters = {
     'breaking_bad': {
         'total': 0,
@@ -23,6 +24,38 @@ counters = {
     }
 }
 counter_lock = Lock()  # To prevent race conditions
+
+# Load saved counters if they exist
+def load_counters():
+    try:
+        if os.path.exists(COUNTER_FILE):
+            with open(COUNTER_FILE, 'r') as f:
+                saved_data = json.load(f)
+                for show in counters.keys():
+                    if show in saved_data:
+                        counters[show]['total'] = saved_data[show]['total']
+                print(f"Loaded counters from {COUNTER_FILE}")
+    except Exception as e:
+        print(f"Error loading counters: {e}")
+
+# Save counters to persistent storage
+def save_counters():
+    try:
+        data_to_save = {}
+        for show in counters:
+            data_to_save[show] = {'total': counters[show]['total']}
+        
+        with open(COUNTER_FILE, 'w') as f:
+            json.dump(data_to_save, f)
+    except Exception as e:
+        print(f"Error saving counters: {e}")
+
+# Periodic save function
+def periodic_save():
+    while True:
+        time.sleep(60)  # Save every minute
+        with counter_lock:
+            save_counters()
 
 # Enable debug mode for better error messages
 app.debug = True
@@ -69,6 +102,10 @@ def increment_counter(show):
         counters[show]['total'] += 1
         counters[show]['clicks'].append(time.time())
         
+        # Save counters after every 10 increments to reduce disk I/O
+        if counters[show]['total'] % 10 == 0:
+            save_counters()
+            
         return jsonify({
             'total': counters[show]['total']
         })
@@ -81,8 +118,18 @@ def send_static(path):
 def serve_image(filename):
     return send_from_directory('static/images', filename)
 
+# Register save_counters function to be called on exit
+atexit.register(save_counters)
+
 if __name__ == '__main__':
     try:
+        # Load existing counters
+        load_counters()
+        
+        # Start background save thread
+        save_thread = Thread(target=periodic_save, daemon=True)
+        save_thread.start()
+        
         # Ensure static directories exist
         os.makedirs('static/images', exist_ok=True)
 
