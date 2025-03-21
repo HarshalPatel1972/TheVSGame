@@ -444,10 +444,20 @@ document.addEventListener("DOMContentLoaded", () => {
           templateId: config.templateId,
         };
 
-        console.log("EmailJS initialized successfully");
+        console.log("EmailJS initialized successfully with:", {
+          publicKey:
+            config.publicKey.substring(0, 3) +
+            "..." +
+            config.publicKey.substring(config.publicKey.length - 3),
+          serviceId: config.serviceId,
+          templateId: config.templateId,
+        });
         return true;
       } else {
-        console.error("Failed to fetch EmailJS configuration");
+        console.error(
+          "Failed to fetch EmailJS configuration, response status:",
+          response.status
+        );
         return false;
       }
     } catch (error) {
@@ -541,6 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Check if EmailJS is properly initialized
       if (!window.emailjsConfig) {
+        console.error("EmailJS is not properly configured");
         throw new Error("EmailJS is not properly configured");
       }
 
@@ -549,9 +560,13 @@ document.addEventListener("DOMContentLoaded", () => {
         from_name: feedbackName.value.trim() || "Anonymous",
         feedback_text: feedbackText.value.trim(),
         reply_to: feedbackEmail.value.trim() || "noreply@example.com",
+        to_email: "hp842484n@gmail.com", // Explicitly set recipient email
       };
 
-      console.log("Sending email with params:", JSON.stringify(templateParams));
+      console.log(
+        "Attempting to send email with params:",
+        JSON.stringify(templateParams)
+      );
       console.log("Using service ID:", window.emailjsConfig.serviceId);
       console.log("Using template ID:", window.emailjsConfig.templateId);
 
@@ -580,6 +595,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Show success message
       sendingIndicator.style.display = "none";
       sendSuccess.style.display = "block";
+      sendSuccess.style.color = "#4caf50";
       sendSuccess.textContent =
         "Thank you! Your feedback has been sent successfully.";
 
@@ -589,7 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
         feedbackModal.style.display = "none";
       }, 3000);
     } catch (error) {
-      console.error("Error sending feedback:", error);
+      console.error("Error sending feedback via EmailJS:", error);
 
       // Display a more helpful error message
       sendingIndicator.style.display = "none";

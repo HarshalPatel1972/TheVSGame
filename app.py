@@ -351,6 +351,15 @@ def get_emailjs_config():
         'serviceId': os.environ.get('EMAILJS_SERVICE_ID', ''),
         'templateId': os.environ.get('EMAILJS_TEMPLATE_ID', '')
     }
+    
+    # Add debug logging to help diagnose issues
+    app.logger.info(f"EmailJS config: {config}")
+    
+    # Ensure all required fields are provided
+    if not all([config['publicKey'], config['serviceId'], config['templateId']]):
+        app.logger.error("Missing EmailJS credentials in environment variables")
+        return jsonify({"error": "EmailJS configuration incomplete"}), 500
+        
     return jsonify(config)
 
 # Register save_counters function to be called on exit
