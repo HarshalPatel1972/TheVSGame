@@ -426,6 +426,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/api/emailjs-config");
       if (response.ok) {
         const config = await response.json();
+
+        // Check if we have all required EmailJS credentials
+        if (!config.publicKey || !config.serviceId || !config.templateId) {
+          console.error(
+            "Missing EmailJS credentials. Email functionality will not work."
+          );
+          return false;
+        }
+
         // Initialize EmailJS with the fetched public key
         emailjs.init(config.publicKey);
 
@@ -436,11 +445,14 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         console.log("EmailJS initialized successfully");
+        return true;
       } else {
         console.error("Failed to fetch EmailJS configuration");
+        return false;
       }
     } catch (error) {
       console.error("Error initializing EmailJS:", error);
+      return false;
     }
   }
 
@@ -527,6 +539,11 @@ document.addEventListener("DOMContentLoaded", () => {
     sendSuccess.style.display = "none";
 
     try {
+      // Check if EmailJS is properly initialized
+      if (!window.emailjsConfig) {
+        throw new Error("EmailJS is not properly configured");
+      }
+
       // Prepare template parameters
       const templateParams = {
         from_name: feedbackName.value.trim() || "Anonymous",
@@ -534,12 +551,18 @@ document.addEventListener("DOMContentLoaded", () => {
         reply_to: feedbackEmail.value.trim() || "noreply@example.com",
       };
 
+      console.log("Sending email with params:", JSON.stringify(templateParams));
+      console.log("Using service ID:", window.emailjsConfig.serviceId);
+      console.log("Using template ID:", window.emailjsConfig.templateId);
+
       // Send the email using EmailJS with credentials from the server
       const response = await emailjs.send(
         window.emailjsConfig.serviceId,
         window.emailjsConfig.templateId,
         templateParams
       );
+
+      console.log("EmailJS response:", response);
 
       // Also save feedback to the server
       await fetch("/api/save-feedback", {
@@ -567,8 +590,40 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 3000);
     } catch (error) {
       console.error("Error sending feedback:", error);
-      alert("An error occurred while sending your feedback. Please try again.");
+
+      // Display a more helpful error message
       sendingIndicator.style.display = "none";
+      sendSuccess.style.display = "block";
+      sendSuccess.textContent =
+        "Your feedback has been saved but email delivery failed. We'll review it anyway!";
+      sendSuccess.style.color = "#ff9800";
+
+      // Still save the feedback to server
+      try {
+        await fetch("/api/save-feedback", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: feedbackName.value.trim(),
+            email: feedbackEmail.value.trim() || "Not provided",
+            feedback: feedbackText.value.trim(),
+          }),
+        });
+
+        // Reset form after 3 seconds and close
+        setTimeout(() => {
+          feedbackForm.reset();
+          feedbackModal.style.display = "none";
+        }, 3000);
+      } catch (saveError) {
+        console.error("Error saving feedback:", saveError);
+        alert(
+          "An error occurred while saving your feedback. Please try again."
+        );
+        sendingIndicator.style.display = "none";
+      }
     }
   });
 
