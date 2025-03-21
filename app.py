@@ -5,6 +5,7 @@ from flask import Flask, render_template, send_from_directory, jsonify, request
 from shutil import copyfile
 from threading import Lock, Thread
 import atexit
+import random
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_key_for_testing")
@@ -27,6 +28,12 @@ counter_lock = Lock()  # To prevent race conditions
 
 # Add a reset timestamp to track when counters were last reset
 LAST_RESET_TIME = int(time.time())
+
+# Add image rotation configuration
+image_rotation = {
+    'interval': 2 * 60 * 1000,  # 2 minutes in milliseconds
+    'last_changed': int(time.time() * 1000)  # Current time in milliseconds
+}
 
 # Load saved counters if they exist
 def load_counters():
@@ -158,6 +165,72 @@ def send_static(path):
 @app.route('/static/images/<path:filename>')
 def serve_image(filename):
     return send_from_directory('static/images', filename)
+
+@app.route('/api/images/<show_type>')
+def get_random_image(show_type):
+    """Get random image for a specific show"""
+    if show_type not in ['breaking_bad', 'game_of_thrones']:
+        return jsonify({'error': 'Invalid show type'}), 400
+    
+    image_dir = os.path.join('static', 'images', show_type)
+    
+    # Check if directory exists
+    if not os.path.exists(image_dir):
+        return jsonify({'error': f'Image directory not found: {image_dir}'}), 404
+    
+    # Get all image files (jpg, jpeg, png)
+    image_files = [f for f in os.listdir(image_dir) 
+                  if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    
+    if not image_files:
+        # Fall back to default images if no custom images found
+        if show_type == 'breaking_bad':
+            return jsonify({'image_url': '/static/images/Breaking BAD.jpg'})
+        else:
+            return jsonify({'image_url': '/static/images/GOT.jpg'})
+    
+    # Pick a random image
+    random_image = random.choice(image_files)
+    image_url = f'/static/images/{show_type}/{random_image}'
+    
+    return jsonify({'image_url': image_url})
+
+@app.route('/api/rotation-interval', methods=['GET', 'POST'])
+def update_rotation_interval():
+    """Get or update the image rotation interval"""
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            
+            # Validate admin code
+            if not data or 'code' not in data or data['code'] != "RETRIBUTION":
+                return jsonify({'error': 'Invalid authorization code'}), 403
+                
+            # Update interval (convert to milliseconds)
+            if 'hours' in data:
+                image_rotation['interval'] = int(data['hours']) * 60 * 60 * 1000
+            elif 'minutes' in data:
+                image_rotation['interval'] = int(data['minutes']) * 60 * 1000
+            elif 'seconds' in data:
+                image_rotation['interval'] = int(data['seconds']) * 1000
+            
+            return jsonify({
+                'success': True,
+                'interval': image_rotation['interval'],
+                'message': f'Rotation interval updated to {image_rotation["interval"]/1000} seconds'
+            })
+            
+        except Exception as e:
+            app.logger.error(f"Error updating rotation interval: {e}")
+            return jsonify({'error': 'Server error'}), 500
+    
+    # GET request - return current settings
+    return jsonify({
+        'interval': image_rotation['interval'],
+        'interval_seconds': image_rotation['interval'] / 1000,
+        'interval_minutes': image_rotation['interval'] / (60 * 1000),
+        'interval_hours': image_rotation['interval'] / (60 * 60 * 1000)
+    })
 
 # Register save_counters function to be called on exit
 atexit.register(save_counters)

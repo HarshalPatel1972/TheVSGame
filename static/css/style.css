@@ -764,6 +764,82 @@ body {
   transform: translateY(-2px);
 }
 
+/* Authentication tabs */
+.auth-tabs {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.auth-tab {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 10px 0;
+  flex-grow: 1;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.auth-tab.active {
+  color: #d4af37;
+  border-bottom: 2px solid #d4af37;
+}
+
+.auth-tab:hover {
+  color: #fff;
+}
+
+/* Timer inputs */
+.timer-inputs {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+}
+
+.timer-input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30%;
+}
+
+.timer-input-group input {
+  width: 100%;
+  text-align: center;
+  padding: 8px;
+  font-size: 1.2em;
+  margin-bottom: 5px;
+}
+
+.timer-input-group label {
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+#saveTimer,
+#cancelTimer {
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+#saveTimer {
+  background-color: rgba(7, 88, 47, 0.8);
+  color: white;
+  border: 1px solid #d4af37;
+}
+
+#saveTimer:hover {
+  background-color: rgba(7, 88, 47, 1);
+  transform: translateY(-2px);
+}
+
 /* Mobile adjustments for reset button and modal */
 @media (max-width: 768px) {
   .reset-button {

@@ -21,12 +21,49 @@
       <!-- Authentication modal -->
       <div id="authModal" class="auth-modal">
         <div class="auth-content">
-          <h2>Admin Authentication</h2>
-          <p>Enter the admin code to reset all counters:</p>
-          <input type="password" id="authCode" placeholder="Enter code" />
-          <div class="auth-buttons">
-            <button id="confirmReset">Reset All Counters</button>
-            <button id="cancelReset">Cancel</button>
+          <h2>Admin Dashboard</h2>
+          <div class="auth-tabs">
+            <button id="resetTabBtn" class="auth-tab active">
+              Reset Counters
+            </button>
+            <button id="timerTabBtn" class="auth-tab">Image Timer</button>
+          </div>
+
+          <div id="resetTab" class="auth-tab-content">
+            <p>Enter the admin code to reset all counters:</p>
+            <input type="password" id="authCode" placeholder="Enter code" />
+            <div class="auth-buttons">
+              <button id="confirmReset">Reset All Counters</button>
+              <button id="cancelReset">Cancel</button>
+            </div>
+          </div>
+
+          <div id="timerTab" class="auth-tab-content" style="display: none">
+            <p>Set image rotation interval:</p>
+            <div class="timer-inputs">
+              <div class="timer-input-group">
+                <input type="number" id="hoursInput" min="0" value="0" />
+                <label for="hoursInput">Hours</label>
+              </div>
+              <div class="timer-input-group">
+                <input type="number" id="minutesInput" min="0" value="2" />
+                <label for="minutesInput">Minutes</label>
+              </div>
+              <div class="timer-input-group">
+                <input type="number" id="secondsInput" min="0" value="0" />
+                <label for="secondsInput">Seconds</label>
+              </div>
+            </div>
+            <p>Enter admin code to confirm:</p>
+            <input
+              type="password"
+              id="timerAuthCode"
+              placeholder="Enter code"
+            />
+            <div class="auth-buttons">
+              <button id="saveTimer">Update Timer</button>
+              <button id="cancelTimer">Cancel</button>
+            </div>
           </div>
         </div>
       </div>

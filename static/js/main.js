@@ -256,4 +256,163 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Add window resize listener to update layout when orientation changes
   window.addEventListener("resize", updateDisplay);
+
+  // Image rotation variables
+  let imageRotationInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
+  let lastRotation = Date.now();
+  let rotationTimer;
+
+  // Function to fetch and update images
+  async function rotateImages() {
+    try {
+      // Fetch Breaking Bad image
+      const bbResponse = await fetch("/api/images/breaking_bad");
+      if (bbResponse.ok) {
+        const bbData = await bbResponse.json();
+        bbBackground.style.backgroundImage = `url("${bbData.image_url}")`;
+      }
+
+      // Fetch Game of Thrones image
+      const gotResponse = await fetch("/api/images/game_of_thrones");
+      if (gotResponse.ok) {
+        const gotData = await gotResponse.json();
+        gotBackground.style.backgroundImage = `url("${gotData.image_url}")`;
+      }
+
+      lastRotation = Date.now();
+    } catch (error) {
+      console.error("Error rotating images:", error);
+    }
+  }
+
+  // Function to start image rotation timer
+  function startRotationTimer() {
+    if (rotationTimer) clearInterval(rotationTimer);
+
+    // Initial rotation
+    rotateImages();
+
+    // Set up interval for future rotations
+    rotationTimer = setInterval(rotateImages, imageRotationInterval);
+
+    console.log(
+      `Image rotation set to ${imageRotationInterval / 1000} seconds`
+    );
+  }
+
+  // Fetch current rotation interval from server
+  async function fetchRotationInterval() {
+    try {
+      const response = await fetch("/api/rotation-interval");
+      if (response.ok) {
+        const data = await response.json();
+        imageRotationInterval = data.interval;
+
+        // Update input fields
+        document.getElementById("hoursInput").value = Math.floor(
+          data.interval_hours
+        );
+        document.getElementById("minutesInput").value = Math.floor(
+          data.interval_minutes % 60
+        );
+        document.getElementById("secondsInput").value = Math.floor(
+          data.interval_seconds % 60
+        );
+
+        // Restart timer with new interval
+        startRotationTimer();
+      }
+    } catch (error) {
+      console.error("Error fetching rotation interval:", error);
+    }
+  }
+
+  // Initialize the image rotation
+  fetchRotationInterval();
+
+  // Authentication modal tabs
+  const resetTabBtn = document.getElementById("resetTabBtn");
+  const timerTabBtn = document.getElementById("timerTabBtn");
+  const resetTab = document.getElementById("resetTab");
+  const timerTab = document.getElementById("timerTab");
+
+  resetTabBtn.addEventListener("click", () => {
+    resetTabBtn.classList.add("active");
+    timerTabBtn.classList.remove("active");
+    resetTab.style.display = "block";
+    timerTab.style.display = "none";
+  });
+
+  timerTabBtn.addEventListener("click", () => {
+    timerTabBtn.classList.add("active");
+    resetTabBtn.classList.remove("active");
+    timerTab.style.display = "block";
+    resetTab.style.display = "none";
+  });
+
+  // Timer update functionality
+  const saveTimer = document.getElementById("saveTimer");
+  const cancelTimer = document.getElementById("cancelTimer");
+  const timerAuthCode = document.getElementById("timerAuthCode");
+  const hoursInput = document.getElementById("hoursInput");
+  const minutesInput = document.getElementById("minutesInput");
+  const secondsInput = document.getElementById("secondsInput");
+
+  saveTimer.addEventListener("click", async () => {
+    const code = timerAuthCode.value.trim();
+
+    if (code === "RETRIBUTION") {
+      try {
+        const hours = parseInt(hoursInput.value) || 0;
+        const minutes = parseInt(minutesInput.value) || 0;
+        const seconds = parseInt(secondsInput.value) || 0;
+
+        // At least one unit must be > 0
+        if (hours === 0 && minutes === 0 && seconds === 0) {
+          alert("Please set a valid time interval (at least 1 second)");
+          return;
+        }
+
+        // Send update to server
+        const response = await fetch("/api/rotation-interval", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code: code,
+            hours: hours,
+            minutes: minutes,
+            seconds: seconds,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          imageRotationInterval = data.interval;
+
+          // Restart timer with new interval
+          startRotationTimer();
+
+          // Close modal
+          authModal.style.display = "none";
+
+          alert(
+            `Image rotation timer updated to ${hours}h ${minutes}m ${seconds}s`
+          );
+        } else {
+          alert("Failed to update timer. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error updating timer:", error);
+        alert("An error occurred while updating the timer.");
+      }
+    } else {
+      alert("Incorrect admin code. Timer update canceled.");
+    }
+  });
+
+  cancelTimer.addEventListener("click", () => {
+    authModal.style.display = "none";
+  });
 });
