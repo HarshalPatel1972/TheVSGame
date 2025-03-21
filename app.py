@@ -1,17 +1,24 @@
 import os
 import json
 import time
+from dotenv import load_dotenv
 from flask import Flask, render_template, send_from_directory, jsonify, request
 from shutil import copyfile
 from threading import Lock, Thread
 import atexit
 import random
 
+# Load environment variables from .env file
+load_dotenv()
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_key_for_testing")
 
 # Path for persistent counter storage
 COUNTER_FILE = os.path.join(os.path.dirname(__file__), 'counters.json')
+
+# Path for feedback storage
+FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), 'feedback.json')
 
 # Global counter storage with default values
 counters = {
@@ -24,6 +31,7 @@ counters = {
         'clicks': [],  # Store recent clicks with timestamps
     }
 }
+
 counter_lock = Lock()  # To prevent race conditions
 
 # Add a reset timestamp to track when counters were last reset
@@ -78,7 +86,6 @@ def save_counters():
         data_to_save = {}
         for show in counters:
             data_to_save[show] = {'total': counters[show]['total']}
-        
         with open(COUNTER_FILE, 'w') as f:
             json.dump(data_to_save, f)
     except Exception as e:
@@ -90,6 +97,29 @@ def periodic_save():
         time.sleep(60)  # Save every minute
         with counter_lock:
             save_counters()
+
+# Load saved feedback if exists
+def load_feedback():
+    try:
+        if os.path.exists(FEEDBACK_FILE):
+            with open(FEEDBACK_FILE, 'r') as f:
+                return json.load(f)
+        return []
+    except Exception as e:
+        print(f"Error loading feedback: {e}")
+        return []
+
+# Save feedback to file
+def save_feedback(feedback_data):
+    try:
+        feedback_list = load_feedback()
+        feedback_list.append(feedback_data)
+        with open(FEEDBACK_FILE, 'w') as f:
+            json.dump(feedback_list, f, indent=2)
+        return True
+    except Exception as e:
+        print(f"Error saving feedback: {e}")
+        return False
 
 # Enable debug mode for better error messages
 app.debug = True
@@ -107,13 +137,11 @@ def get_counters():
         for show in counters:
             counters[show]['clicks'] = [click for click in counters[show]['clicks'] 
                                       if current_time - click < 5]
-            
         # Calculate points per second (clicks in the last second)
         bb_recent = sum(1 for click in counters['breaking_bad']['clicks'] 
                       if current_time - click <= 1)
         got_recent = sum(1 for click in counters['game_of_thrones']['clicks'] 
                        if current_time - click <= 1)
-        
         return jsonify({
             'breaking_bad': {
                 'total': counters['breaking_bad']['total'],
@@ -153,7 +181,7 @@ def reset_counters():
         data = request.get_json()
         if not data or 'code' not in data:
             return jsonify({'error': 'Missing authorization code'}), 400
-            
+        
         admin_code = data.get('code')
         
         # Verify the admin code
@@ -230,7 +258,7 @@ def update_rotation_interval():
             # Validate admin code
             if not data or 'code' not in data or data['code'] != "RETRIBUTION":
                 return jsonify({'error': 'Invalid authorization code'}), 403
-                
+            
             # Calculate new interval in milliseconds
             new_interval = 0
             if 'hours' in data:
@@ -243,7 +271,7 @@ def update_rotation_interval():
             # Ensure at least 1 second
             if new_interval < 1000:
                 new_interval = 1000
-                
+            
             # Update interval
             image_rotation['interval'] = new_interval
             image_rotation['last_changed'] = int(time.time() * 1000)
@@ -267,8 +295,63 @@ def update_rotation_interval():
         'interval_seconds': image_rotation['interval'] / 1000,
         'interval_minutes': (image_rotation['interval'] / 1000) / 60,
         'interval_hours': (image_rotation['interval'] / 1000) / 3600,
-        'last_changed': image_rotation['last_changed']
+        'last_changed': image_rotation['last_changed'] / 1000,
     })
+
+@app.route('/api/save-feedback', methods=['POST'])
+def save_feedback_endpoint():
+    """Save feedback without sending email"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'feedback' not in data:
+            return jsonify({'error': 'Missing required fields'}), 400
+            
+        name = data.get('name', 'Anonymous')
+        email = data.get('email', 'Not provided')
+        feedback = data.get('feedback')
+        
+        # Create feedback record with timestamp
+        feedback_data = {
+            'name': name,
+            'email': email,
+            'feedback': feedback,
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        
+        # Save feedback to file
+        save_feedback(feedback_data)
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Feedback saved successfully'
+        })
+            
+    except Exception as e:
+        app.logger.error(f"Error saving feedback: {str(e)}")
+        return jsonify({'error': 'Server error saving feedback', 'message': str(e)}), 500
+
+# Admin route to view feedback (protected with the same password)
+@app.route('/admin/feedback', methods=['GET'])
+def view_feedback():
+    """View all saved feedback (protected)"""
+    auth_code = request.args.get('code')
+    
+    if auth_code != "RETRIBUTION":
+        return jsonify({'error': 'Unauthorized access'}), 403
+        
+    feedback_list = load_feedback()
+    return jsonify({'feedback': feedback_list})
+
+@app.route('/api/emailjs-config', methods=['GET'])
+def get_emailjs_config():
+    """Get EmailJS configuration for client-side use"""
+    config = {
+        'publicKey': os.environ.get('EMAILJS_PUBLIC_KEY', ''),
+        'serviceId': os.environ.get('EMAILJS_SERVICE_ID', ''),
+        'templateId': os.environ.get('EMAILJS_TEMPLATE_ID', '')
+    }
+    return jsonify(config)
 
 # Register save_counters function to be called on exit
 atexit.register(save_counters)
@@ -285,7 +368,7 @@ if __name__ == '__main__':
         
         # Ensure static directories exist
         os.makedirs('static/images', exist_ok=True)
-
+        
         # Copy images from attached_assets to static/images
         source_images = ['Breaking BAD.jpg', 'GOT.jpg']
         for image in source_images:

@@ -8,6 +8,11 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
+    <!-- Add EmailJS SDK -->
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
+    ></script>
   </head>
   <body>
     <div class="container">
@@ -49,12 +54,18 @@
             </div>
 
             <div class="form-group">
-              <label for="feedbackEmail">Your Email (optional)</label>
+              <label for="feedbackEmail"
+                >Your Email
+                <span id="emailRequiredMark" class="required"
+                  >(optional)</span
+                ></label
+              >
               <input
                 type="email"
                 id="feedbackEmail"
                 placeholder="Enter your email"
               />
+              <div id="emailError" class="error-message"></div>
             </div>
 
             <div class="send-options">
@@ -85,6 +96,16 @@
                 </svg>
                 Email
               </button>
+            </div>
+            <div
+              id="sendingIndicator"
+              class="sending-indicator"
+              style="display: none"
+            >
+              Sending your feedback...
+            </div>
+            <div id="sendSuccess" class="success-message" style="display: none">
+              Thank you! Your feedback has been sent successfully.
             </div>
           </form>
         </div>

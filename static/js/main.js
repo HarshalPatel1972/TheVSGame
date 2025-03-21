@@ -415,10 +415,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const feedbackEmail = document.getElementById("feedbackEmail");
   const sendWhatsapp = document.getElementById("sendWhatsapp");
   const sendEmail = document.getElementById("sendEmail");
+  const emailError = document.getElementById("emailError");
+  const emailRequiredMark = document.getElementById("emailRequiredMark");
+  const sendingIndicator = document.getElementById("sendingIndicator");
+  const sendSuccess = document.getElementById("sendSuccess");
+
+  // Initialize EmailJS credentials from server
+  async function initEmailJS() {
+    try {
+      const response = await fetch("/api/emailjs-config");
+      if (response.ok) {
+        const config = await response.json();
+        // Initialize EmailJS with the fetched public key
+        emailjs.init(config.publicKey);
+
+        // Store other credentials for later use
+        window.emailjsConfig = {
+          serviceId: config.serviceId,
+          templateId: config.templateId,
+        };
+
+        console.log("EmailJS initialized successfully");
+      } else {
+        console.error("Failed to fetch EmailJS configuration");
+      }
+    } catch (error) {
+      console.error("Error initializing EmailJS:", error);
+    }
+  }
+
+  // Call this function when the page loads
+  initEmailJS();
 
   // Show feedback modal when button is clicked
   feedbackButton.addEventListener("click", () => {
     feedbackModal.style.display = "flex";
+    emailRequiredMark.textContent = "(optional)";
+    emailError.textContent = "";
+    sendSuccess.style.display = "none";
   });
 
   // Close feedback modal
@@ -440,6 +474,17 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Make email required for WhatsApp option
+    if (!feedbackEmail.value.trim()) {
+      emailRequiredMark.textContent = "(required)";
+      emailError.textContent = "Email is required when sending via WhatsApp";
+      feedbackEmail.focus();
+      return;
+    }
+
+    // Clear any previous errors
+    emailError.textContent = "";
+
     const name = feedbackName.value.trim()
       ? `Name: ${feedbackName.value}\n`
       : "";
@@ -451,36 +496,80 @@ document.addEventListener("DOMContentLoaded", () => {
     const message = encodeURIComponent(`${name}${email}${feedback}`);
     window.open(`https://wa.me/917017297823?text=${message}`, "_blank");
 
-    // Reset and close form after sending
+    // Also save feedback to the server
+    fetch("/api/save-feedback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: feedbackName.value.trim(),
+        email: feedbackEmail.value.trim(),
+        feedback: feedbackText.value.trim(),
+      }),
+    }).catch((error) => console.error("Error saving feedback:", error));
+
+    // Reset form and close modal
     feedbackForm.reset();
     feedbackModal.style.display = "none";
   });
 
-  // Send via Email
-  sendEmail.addEventListener("click", () => {
+  // Update the form submission logic
+  sendEmail.addEventListener("click", async () => {
+    // Check for required fields
     if (!feedbackText.value.trim()) {
       alert("Please enter your feedback");
       return;
     }
 
-    const name = feedbackName.value.trim()
-      ? `Name: ${feedbackName.value}\n`
-      : "";
-    const email = feedbackEmail.value.trim()
-      ? `Email: ${feedbackEmail.value}\n`
-      : "";
-    const feedback = `Feedback: ${feedbackText.value}`;
+    // Show sending indicator
+    sendingIndicator.style.display = "block";
+    sendSuccess.style.display = "none";
 
-    const subject = encodeURIComponent("Feedback for Breaking Bad vs GOT App");
-    const body = encodeURIComponent(`${name}${email}${feedback}`);
-    window.open(
-      `mailto:hp842484n@gmail.com?subject=${subject}&body=${body}`,
-      "_blank"
-    );
+    try {
+      // Prepare template parameters
+      const templateParams = {
+        from_name: feedbackName.value.trim() || "Anonymous",
+        feedback_text: feedbackText.value.trim(),
+        reply_to: feedbackEmail.value.trim() || "noreply@example.com",
+      };
 
-    // Reset and close form after sending
-    feedbackForm.reset();
-    feedbackModal.style.display = "none";
+      // Send the email using EmailJS with credentials from the server
+      const response = await emailjs.send(
+        window.emailjsConfig.serviceId,
+        window.emailjsConfig.templateId,
+        templateParams
+      );
+
+      // Also save feedback to the server
+      await fetch("/api/save-feedback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: feedbackName.value.trim(),
+          email: feedbackEmail.value.trim() || "Not provided",
+          feedback: feedbackText.value.trim(),
+        }),
+      });
+
+      // Show success message
+      sendingIndicator.style.display = "none";
+      sendSuccess.style.display = "block";
+      sendSuccess.textContent =
+        "Thank you! Your feedback has been sent successfully.";
+
+      // Reset form after 3 seconds and close
+      setTimeout(() => {
+        feedbackForm.reset();
+        feedbackModal.style.display = "none";
+      }, 3000);
+    } catch (error) {
+      console.error("Error sending feedback:", error);
+      alert("An error occurred while sending your feedback. Please try again.");
+      sendingIndicator.style.display = "none";
+    }
   });
 
   // Authentication modal tabs
