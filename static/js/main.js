@@ -322,16 +322,43 @@ document.addEventListener("DOMContentLoaded", () => {
       `Setting up image rotation every ${imageRotationInterval / 1000} seconds`
     );
 
-    // Do initial rotation immediately
-    rotateImages();
-
-    // We're using setTimeout for precise timing instead of setInterval
-    // rotationTimer is kept for backward compatibility
-    rotationTimer = "using_scheduled_rotation_instead";
+    // Only schedule next rotation, don't immediately rotate images when changing timer
+    scheduleNextRotation();
   }
 
-  // Fetch current rotation interval from server
-  async function fetchRotationInterval() {
+  // Initialize image rotation - we want to do initial rotation only on first load
+  async function initializeImageRotation() {
+    try {
+      const response = await fetch("/api/rotation-interval");
+      if (response.ok) {
+        const data = await response.json();
+        imageRotationInterval = data.interval;
+
+        // Update input fields
+        document.getElementById("hoursInput").value = Math.floor(
+          data.interval_hours
+        );
+        document.getElementById("minutesInput").value = Math.floor(
+          data.interval_minutes % 60
+        );
+        document.getElementById("secondsInput").value = Math.floor(
+          data.interval_seconds % 60
+        );
+
+        // Do initial rotation only on first page load
+        rotateImages();
+
+        console.log(
+          `Initial rotation interval: ${imageRotationInterval / 1000}s`
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching rotation interval:", error);
+    }
+  }
+
+  // Fetch current rotation interval from server when timer settings change
+  async function updateRotationInterval() {
     try {
       const response = await fetch("/api/rotation-interval");
       if (response.ok) {
@@ -357,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
             data.interval_seconds % 60
           );
 
-          // Restart timer with new interval
+          // Restart timer with new interval (but don't rotate images immediately)
           startRotationTimer();
         } else {
           console.log(
@@ -376,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Initialize the image rotation
-  fetchRotationInterval();
+  initializeImageRotation();
 
   // Authentication modal tabs
   const resetTabBtn = document.getElementById("resetTabBtn");
@@ -447,14 +474,14 @@ document.addEventListener("DOMContentLoaded", () => {
             `Server confirmed new interval: ${imageRotationInterval / 1000}s`
           );
 
-          // Restart timer with new interval
+          // Update timer WITHOUT immediate image rotation
           startRotationTimer();
 
           // Close modal
           authModal.style.display = "none";
 
           alert(
-            `Image rotation timer updated to ${hours}h ${minutes}m ${seconds}s`
+            `Image rotation timer updated to ${hours}h ${minutes}m ${seconds}s. Next rotation will occur in ${hours}h ${minutes}m ${seconds}s.`
           );
         } else {
           alert("Failed to update timer. Please try again.");
