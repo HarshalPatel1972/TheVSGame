@@ -653,3 +653,132 @@ body {
     min-height: 44px; /* Minimum touch target size */
   }
 }
+
+/* Reset button styles */
+.reset-button {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  padding: 8px 15px;
+  font-size: 0.9em;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+  background-color: rgba(255, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.05);
+}
+
+/* Authentication modal */
+.auth-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 20;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-content {
+  background: linear-gradient(
+    135deg,
+    rgba(7, 88, 47, 0.9),
+    rgba(139, 0, 0, 0.9)
+  );
+  border: 2px solid #d4af37;
+  border-radius: 10px;
+  padding: 25px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+}
+
+.auth-content h2 {
+  color: #d4af37;
+  margin-bottom: 15px;
+  font-family: "Game of Thrones", serif;
+  letter-spacing: 1px;
+}
+
+.auth-content p {
+  color: white;
+  margin-bottom: 20px;
+}
+
+.auth-content input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  text-align: center;
+  font-size: 1.1em;
+}
+
+.auth-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.auth-buttons button {
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+#confirmReset {
+  background-color: rgba(139, 0, 0, 0.8);
+  color: white;
+  border: 1px solid #d4af37;
+}
+
+#cancelReset {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+#confirmReset:hover {
+  background-color: rgba(139, 0, 0, 1);
+  transform: translateY(-2px);
+}
+
+#cancelReset:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  transform: translateY(-2px);
+}
+
+/* Mobile adjustments for reset button and modal */
+@media (max-width: 768px) {
+  .reset-button {
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+    font-size: 0.8em;
+  }
+
+  .auth-content {
+    padding: 15px;
+  }
+
+  .auth-buttons button {
+    padding: 8px 12px;
+    font-size: 0.9em;
+  }
+}

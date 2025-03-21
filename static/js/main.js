@@ -168,6 +168,86 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Reset functionality
+  const resetButton = document.getElementById("resetButton");
+  const authModal = document.getElementById("authModal");
+  const authCode = document.getElementById("authCode");
+  const confirmReset = document.getElementById("confirmReset");
+  const cancelReset = document.getElementById("cancelReset");
+
+  // Show auth modal when reset button is clicked
+  resetButton.addEventListener("click", () => {
+    authModal.style.display = "flex";
+    authCode.value = ""; // Clear previous input
+    authCode.focus();
+  });
+
+  // Close modal when cancel is clicked
+  cancelReset.addEventListener("click", () => {
+    authModal.style.display = "none";
+  });
+
+  // Handle reset confirmation
+  confirmReset.addEventListener("click", async () => {
+    const code = authCode.value.trim();
+
+    if (code === "RETRIBUTION") {
+      try {
+        const response = await fetch("/api/reset", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code: code }),
+        });
+
+        if (response.ok) {
+          // Clear local storage for personal scores
+          localStorage.clear();
+
+          // Reset personal scores in memory
+          bbCounter.personalScore = 0;
+          gotCounter.personalScore = 0;
+
+          // Show reset success message
+          alert("All counters have been reset successfully!");
+
+          // Refresh counters from server
+          await fetchCounters();
+          updateDisplay();
+
+          // Close modal
+          authModal.style.display = "none";
+        } else {
+          alert("Reset failed. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error during reset:", error);
+        alert("An error occurred during reset.");
+      }
+    } else {
+      alert("Incorrect admin code. Reset canceled.");
+    }
+  });
+
+  // Allow Enter key in the auth input field
+  authCode.addEventListener("keyup", (event) => {
+    if (event.key === "Enter") {
+      confirmReset.click();
+    }
+    // Allow Escape key to cancel
+    if (event.key === "Escape") {
+      cancelReset.click();
+    }
+  });
+
+  // Close modal if clicked outside
+  authModal.addEventListener("click", (event) => {
+    if (event.target === authModal) {
+      authModal.style.display = "none";
+    }
+  });
+
   // Initial fetch and display
   fetchCounters();
 

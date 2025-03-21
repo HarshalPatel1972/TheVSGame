@@ -1,52 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Breaking Bad vs Game of Thrones</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
     <div class="container">
-        <div class="winner-status" id="winnerStatus">
-            Breaking Bad is winning by 1,000 points
+      <div class="winner-status" id="winnerStatus">
+        Breaking Bad is winning by 1,000 points
+      </div>
+
+      <!-- Add reset button -->
+      <button id="resetButton" class="reset-button">Reset</button>
+
+      <!-- Authentication modal -->
+      <div id="authModal" class="auth-modal">
+        <div class="auth-content">
+          <h2>Admin Authentication</h2>
+          <p>Enter the admin code to reset all counters:</p>
+          <input type="password" id="authCode" placeholder="Enter code" />
+          <div class="auth-buttons">
+            <button id="confirmReset">Reset All Counters</button>
+            <button id="cancelReset">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <main class="game-container">
+        <div class="background-slider">
+          <div class="bb-background"></div>
+          <div class="got-background"></div>
         </div>
 
-        <main class="game-container">
-            <div class="background-slider">
-                <div class="bb-background"></div>
-                <div class="got-background"></div>
-            </div>
+        <div class="vs-container">
+          <div class="vs-text">VS</div>
+        </div>
 
-            <div class="vs-container">
-                <div class="vs-text">VS</div>
+        <div class="side breaking-bad">
+          <div class="side-content">
+            <button class="increment-btn bb-btn" id="bbBtn">
+              +1 Breaking Bad
+            </button>
+            <div class="counter-container">
+              <div class="points" id="bbPoints">0</div>
+              <div class="points-per-second" id="bbPPS">
+                0 points per second
+              </div>
+              <div class="personal-score">
+                You've scored <span id="bbPersonal">0</span> points for Breaking
+                Bad
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div class="side breaking-bad">
-                <div class="side-content">
-                    <button class="increment-btn bb-btn" id="bbBtn">+1 Breaking Bad</button>
-                    <div class="counter-container">
-                        <div class="points" id="bbPoints">0</div>
-                        <div class="points-per-second" id="bbPPS">0 points per second</div>
-                        <div class="personal-score">You've scored <span id="bbPersonal">0</span> points for Breaking Bad</div>
-                    </div>
-                </div>
+        <div class="side got">
+          <div class="side-content">
+            <button class="increment-btn got-btn" id="gotBtn">
+              +1 Game of Thrones
+            </button>
+            <div class="counter-container">
+              <div class="points" id="gotPoints">0</div>
+              <div class="points-per-second" id="gotPPS">
+                0 points per second
+              </div>
+              <div class="personal-score">
+                You've scored <span id="gotPersonal">0</span> points for Game of
+                Thrones
+              </div>
             </div>
-
-            <div class="side got">
-                <div class="side-content">
-                    <button class="increment-btn got-btn" id="gotBtn">+1 Game of Thrones</button>
-                    <div class="counter-container">
-                        <div class="points" id="gotPoints">0</div>
-                        <div class="points-per-second" id="gotPPS">0 points per second</div>
-                        <div class="personal-score">You've scored <span id="gotPersonal">0</span> points for Game of Thrones</div>
-                    </div>
-                </div>
-            </div>
-        </main>
+          </div>
+        </div>
+      </main>
     </div>
 
     <script src="{{ url_for('static', filename='js/counter.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-</body>
+  </body>
 </html>

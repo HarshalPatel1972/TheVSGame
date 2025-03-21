@@ -109,6 +109,35 @@ def increment_counter(show):
             'total': counters[show]['total']
         })
 
+@app.route('/api/reset', methods=['POST'])
+def reset_counters():
+    """Reset all counters (admin functionality)"""
+    try:
+        data = request.get_json()
+        if not data or 'code' not in data:
+            return jsonify({'error': 'Missing authorization code'}), 400
+            
+        admin_code = data.get('code')
+        
+        # Verify the admin code
+        if admin_code != "RETRIBUTION":
+            return jsonify({'error': 'Invalid authorization code'}), 403
+        
+        # Reset all counters if authorized
+        with counter_lock:
+            for show in counters:
+                counters[show]['total'] = 0
+                counters[show]['clicks'] = []
+            
+            # Save the reset state to persistent storage
+            save_counters()
+            
+            return jsonify({'success': True, 'message': 'All counters have been reset'})
+            
+    except Exception as e:
+        app.logger.error(f"Error in reset endpoint: {e}")
+        return jsonify({'error': 'Server error during reset'}), 500
+
 @app.route('/static/<path:path>')
 def send_static(path):
     return send_from_directory('static', path)
