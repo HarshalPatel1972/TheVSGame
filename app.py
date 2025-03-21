@@ -346,21 +346,33 @@ def view_feedback():
 @app.route('/api/emailjs-config', methods=['GET'])
 def get_emailjs_config():
     """Get EmailJS configuration for client-side use"""
-    config = {
-        'publicKey': os.environ.get('EMAILJS_PUBLIC_KEY', ''),
-        'serviceId': os.environ.get('EMAILJS_SERVICE_ID', ''),
-        'templateId': os.environ.get('EMAILJS_TEMPLATE_ID', '')
-    }
-    
-    # Add debug logging to help diagnose issues
-    app.logger.info(f"EmailJS config: {config}")
-    
-    # Ensure all required fields are provided
-    if not all([config['publicKey'], config['serviceId'], config['templateId']]):
-        app.logger.error("Missing EmailJS credentials in environment variables")
-        return jsonify({"error": "EmailJS configuration incomplete"}), 500
+    try:
+        config = {
+            'publicKey': os.environ.get('EMAILJS_PUBLIC_KEY', ''),
+            'serviceId': os.environ.get('EMAILJS_SERVICE_ID', ''),
+            'templateId': os.environ.get('EMAILJS_TEMPLATE_ID', '')
+        }
         
-    return jsonify(config)
+        # Add detailed logging for debugging
+        app.logger.info(f"EmailJS config: publicKey={config['publicKey'][:3]}...{config['publicKey'][-3:] if len(config['publicKey']) > 6 else ''}, serviceId={config['serviceId']}, templateId={config['templateId']}")
+        
+        # Ensure all required fields are provided
+        missing_fields = []
+        if not config['publicKey']:
+            missing_fields.append('EMAILJS_PUBLIC_KEY')
+        if not config['serviceId']:
+            missing_fields.append('EMAILJS_SERVICE_ID')
+        if not config['templateId']:
+            missing_fields.append('EMAILJS_TEMPLATE_ID')
+            
+        if missing_fields:
+            app.logger.error(f"Missing EmailJS credentials in environment variables: {', '.join(missing_fields)}")
+            return jsonify({"error": f"EmailJS configuration incomplete. Missing: {', '.join(missing_fields)}"}), 500
+            
+        return jsonify(config)
+    except Exception as e:
+        app.logger.error(f"Error in emailjs-config endpoint: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 # Register save_counters function to be called on exit
 atexit.register(save_counters)

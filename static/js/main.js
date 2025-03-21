@@ -472,7 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Show feedback modal when button is clicked
   feedbackButton.addEventListener("click", () => {
     feedbackModal.style.display = "flex";
-    emailRequiredMark.textContent = "(optional)";
+    emailRequiredMark.textContent = "(required)"; // Changed to required
     emailError.textContent = "";
     sendSuccess.style.display = "none";
   });
@@ -544,6 +544,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Make email required - new validation
+    if (!feedbackEmail.value.trim()) {
+      emailError.textContent = "Email is required";
+      feedbackEmail.focus();
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(feedbackEmail.value.trim())) {
+      emailError.textContent = "Please enter a valid email address";
+      feedbackEmail.focus();
+      return;
+    }
+
     // Show sending indicator
     sendingIndicator.style.display = "block";
     sendSuccess.style.display = "none";
@@ -559,8 +574,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const templateParams = {
         from_name: feedbackName.value.trim() || "Anonymous",
         feedback_text: feedbackText.value.trim(),
-        reply_to: feedbackEmail.value.trim() || "noreply@example.com",
+        reply_to: feedbackEmail.value.trim(),
         to_email: "hp842484n@gmail.com", // Explicitly set recipient email
+        user_email: feedbackEmail.value.trim(), // Add user email as another parameter
       };
 
       console.log(
