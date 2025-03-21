@@ -405,6 +405,84 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize the image rotation
   initializeImageRotation();
 
+  // Feedback Form Functionality
+  const feedbackButton = document.getElementById("feedbackButton");
+  const feedbackModal = document.getElementById("feedbackModal");
+  const closeFeedback = document.getElementById("closeFeedback");
+  const feedbackForm = document.getElementById("feedbackForm");
+  const feedbackText = document.getElementById("feedbackText");
+  const feedbackName = document.getElementById("feedbackName");
+  const feedbackEmail = document.getElementById("feedbackEmail");
+  const sendWhatsapp = document.getElementById("sendWhatsapp");
+  const sendEmail = document.getElementById("sendEmail");
+
+  // Show feedback modal when button is clicked
+  feedbackButton.addEventListener("click", () => {
+    feedbackModal.style.display = "flex";
+  });
+
+  // Close feedback modal
+  closeFeedback.addEventListener("click", () => {
+    feedbackModal.style.display = "none";
+  });
+
+  // Close modal if clicked outside content
+  feedbackModal.addEventListener("click", (event) => {
+    if (event.target === feedbackModal) {
+      feedbackModal.style.display = "none";
+    }
+  });
+
+  // Send via WhatsApp
+  sendWhatsapp.addEventListener("click", () => {
+    if (!feedbackText.value.trim()) {
+      alert("Please enter your feedback");
+      return;
+    }
+
+    const name = feedbackName.value.trim()
+      ? `Name: ${feedbackName.value}\n`
+      : "";
+    const email = feedbackEmail.value.trim()
+      ? `Email: ${feedbackEmail.value}\n`
+      : "";
+    const feedback = `Feedback: ${feedbackText.value}`;
+
+    const message = encodeURIComponent(`${name}${email}${feedback}`);
+    window.open(`https://wa.me/917017297823?text=${message}`, "_blank");
+
+    // Reset and close form after sending
+    feedbackForm.reset();
+    feedbackModal.style.display = "none";
+  });
+
+  // Send via Email
+  sendEmail.addEventListener("click", () => {
+    if (!feedbackText.value.trim()) {
+      alert("Please enter your feedback");
+      return;
+    }
+
+    const name = feedbackName.value.trim()
+      ? `Name: ${feedbackName.value}\n`
+      : "";
+    const email = feedbackEmail.value.trim()
+      ? `Email: ${feedbackEmail.value}\n`
+      : "";
+    const feedback = `Feedback: ${feedbackText.value}`;
+
+    const subject = encodeURIComponent("Feedback for Breaking Bad vs GOT App");
+    const body = encodeURIComponent(`${name}${email}${feedback}`);
+    window.open(
+      `mailto:hp842484n@gmail.com?subject=${subject}&body=${body}`,
+      "_blank"
+    );
+
+    // Reset and close form after sending
+    feedbackForm.reset();
+    feedbackModal.style.display = "none";
+  });
+
   // Authentication modal tabs
   const resetTabBtn = document.getElementById("resetTabBtn");
   const timerTabBtn = document.getElementById("timerTabBtn");
