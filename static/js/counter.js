@@ -4,7 +4,7 @@ class Counter {
     this.value = 0;
     this.incrementPerSecond = 0;
 
-    // Only personal score from localStorage
+    // Personal score from localStorage
     this.personalScore = parseInt(
       localStorage.getItem(`${name}_personal`) || "0"
     );
@@ -38,7 +38,7 @@ class Counter {
     }
   }
 
-  // Update from API data without resetting scores
+  // Update from API data without any reset logic
   updateFromApiData(data) {
     if (data && data[this.name]) {
       this.value = data[this.name].total;

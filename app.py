@@ -88,8 +88,7 @@ def get_counters():
             'game_of_thrones': {
                 'total': counters['game_of_thrones']['total'],
                 'per_second': got_recent
-            },
-            'server_start_time': SERVER_START_TIME  # Add server start time to response
+            }
         })
 
 @app.route('/api/increment/<show>', methods=['POST'])

@@ -70,6 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const gotTotal = gotCounter.value;
     const diff = Math.abs(bbTotal - gotTotal);
 
+    // Check if both counters are at 0 - initial state
+    if (bbTotal === 0 && gotTotal === 0) {
+      winnerStatus.textContent =
+        "🔥 THE EPIC BATTLE AWAITS! CHOOSE YOUR CHAMPION! 🔥";
+      winnerStatus.className = "winner-status battle-begin";
+      return;
+    }
+
     if (bbTotal === gotTotal) {
       winnerStatus.textContent = "EPIC STANDOFF! It's a tie!";
       winnerStatus.className = "winner-status tie";
