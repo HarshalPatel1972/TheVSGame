@@ -29,11 +29,35 @@ counter_lock = Lock()  # To prevent race conditions
 # Add a reset timestamp to track when counters were last reset
 LAST_RESET_TIME = int(time.time())
 
-# Add image rotation configuration
+# Add image rotation configuration with persistent storage
+ROTATION_CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'rotation_config.json')
+
+# Default config
 image_rotation = {
-    'interval': 2 * 60 * 1000,  # 2 minutes in milliseconds
+    'interval': 5 * 60 * 1000,  # 5 minutes in milliseconds by default
     'last_changed': int(time.time() * 1000)  # Current time in milliseconds
 }
+
+# Load saved rotation config if it exists
+def load_rotation_config():
+    global image_rotation
+    try:
+        if os.path.exists(ROTATION_CONFIG_FILE):
+            with open(ROTATION_CONFIG_FILE, 'r') as f:
+                saved_config = json.load(f)
+                image_rotation.update(saved_config)
+                print(f"Loaded rotation config: {image_rotation['interval']/1000} seconds")
+    except Exception as e:
+        print(f"Error loading rotation config: {e}")
+
+# Save rotation config to persistent storage
+def save_rotation_config():
+    try:
+        with open(ROTATION_CONFIG_FILE, 'w') as f:
+            json.dump(image_rotation, f)
+            print(f"Saved rotation config: {image_rotation['interval']/1000} seconds")
+    except Exception as e:
+        print(f"Error saving rotation config: {e}")
 
 # Load saved counters if they exist
 def load_counters():
@@ -207,13 +231,25 @@ def update_rotation_interval():
             if not data or 'code' not in data or data['code'] != "RETRIBUTION":
                 return jsonify({'error': 'Invalid authorization code'}), 403
                 
-            # Update interval (convert to milliseconds)
+            # Calculate new interval in milliseconds
+            new_interval = 0
             if 'hours' in data:
-                image_rotation['interval'] = int(data['hours']) * 60 * 60 * 1000
-            elif 'minutes' in data:
-                image_rotation['interval'] = int(data['minutes']) * 60 * 1000
-            elif 'seconds' in data:
-                image_rotation['interval'] = int(data['seconds']) * 1000
+                new_interval += int(data['hours']) * 60 * 60 * 1000
+            if 'minutes' in data:
+                new_interval += int(data['minutes']) * 60 * 1000
+            if 'seconds' in data:
+                new_interval += int(data['seconds']) * 1000
+            
+            # Ensure at least 1 second
+            if new_interval < 1000:
+                new_interval = 1000
+                
+            # Update interval
+            image_rotation['interval'] = new_interval
+            image_rotation['last_changed'] = int(time.time() * 1000)
+            
+            # Persist the change
+            save_rotation_config()
             
             return jsonify({
                 'success': True,
@@ -223,14 +259,15 @@ def update_rotation_interval():
             
         except Exception as e:
             app.logger.error(f"Error updating rotation interval: {e}")
-            return jsonify({'error': 'Server error'}), 500
+            return jsonify({'error': f'Server error: {str(e)}'}), 500
     
     # GET request - return current settings
     return jsonify({
         'interval': image_rotation['interval'],
         'interval_seconds': image_rotation['interval'] / 1000,
-        'interval_minutes': image_rotation['interval'] / (60 * 1000),
-        'interval_hours': image_rotation['interval'] / (60 * 60 * 1000)
+        'interval_minutes': (image_rotation['interval'] / 1000) / 60,
+        'interval_hours': (image_rotation['interval'] / 1000) / 3600,
+        'last_changed': image_rotation['last_changed']
     })
 
 # Register save_counters function to be called on exit
@@ -238,8 +275,9 @@ atexit.register(save_counters)
 
 if __name__ == '__main__':
     try:
-        # Load existing counters
+        # Load existing counters and configuration
         load_counters()
+        load_rotation_config()
         
         # Start background save thread
         save_thread = Thread(target=periodic_save, daemon=True)

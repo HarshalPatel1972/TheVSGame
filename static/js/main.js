@@ -260,12 +260,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Image rotation variables
   let imageRotationInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
   let lastRotation = Date.now();
-  let rotationTimer;
+  let rotationTimer = null;
+  let scheduledRotation = null;
 
   // Function to fetch and update images
   async function rotateImages() {
     try {
-      console.log("Rotating images...");
+      console.log("Rotating images at", new Date().toLocaleTimeString());
 
       // Fetch Breaking Bad image
       const bbResponse = await fetch("/api/images/breaking_bad");
@@ -284,24 +285,49 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       lastRotation = Date.now();
+
+      // Schedule next rotation at exact interval
+      scheduleNextRotation();
     } catch (error) {
       console.error("Error rotating images:", error);
+      // Even if there's an error, try to schedule the next rotation
+      scheduleNextRotation();
     }
+  }
+
+  // Schedule next rotation at exact interval
+  function scheduleNextRotation() {
+    // Clear any existing scheduled rotation
+    if (scheduledRotation) {
+      clearTimeout(scheduledRotation);
+    }
+
+    // Schedule next rotation
+    scheduledRotation = setTimeout(rotateImages, imageRotationInterval);
+    console.log(
+      `Next image rotation scheduled in ${
+        imageRotationInterval / 1000
+      } seconds at`,
+      new Date(Date.now() + imageRotationInterval).toLocaleTimeString()
+    );
   }
 
   // Function to start image rotation timer
   function startRotationTimer() {
+    // Clear any existing timers
     if (rotationTimer) clearInterval(rotationTimer);
-
-    // Initial rotation
-    rotateImages();
-
-    // Set up interval for future rotations
-    rotationTimer = setInterval(rotateImages, imageRotationInterval);
+    if (scheduledRotation) clearTimeout(scheduledRotation);
 
     console.log(
-      `Image rotation set to ${imageRotationInterval / 1000} seconds`
+      `Setting up image rotation every ${imageRotationInterval / 1000} seconds`
     );
+
+    // Do initial rotation immediately
+    rotateImages();
+
+    // We're using setTimeout for precise timing instead of setInterval
+    // rotationTimer is kept for backward compatibility
+    rotationTimer = "using_scheduled_rotation_instead";
   }
 
   // Fetch current rotation interval from server
@@ -310,21 +336,39 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/api/rotation-interval");
       if (response.ok) {
         const data = await response.json();
-        imageRotationInterval = data.interval;
 
-        // Update input fields
-        document.getElementById("hoursInput").value = Math.floor(
-          data.interval_hours
-        );
-        document.getElementById("minutesInput").value = Math.floor(
-          data.interval_minutes % 60
-        );
-        document.getElementById("secondsInput").value = Math.floor(
-          data.interval_seconds % 60
-        );
+        // Only restart timer if interval has changed
+        if (imageRotationInterval !== data.interval) {
+          console.log(
+            `Updating rotation interval from ${
+              imageRotationInterval / 1000
+            }s to ${data.interval / 1000}s`
+          );
+          imageRotationInterval = data.interval;
 
-        // Restart timer with new interval
-        startRotationTimer();
+          // Update input fields
+          document.getElementById("hoursInput").value = Math.floor(
+            data.interval_hours
+          );
+          document.getElementById("minutesInput").value = Math.floor(
+            data.interval_minutes % 60
+          );
+          document.getElementById("secondsInput").value = Math.floor(
+            data.interval_seconds % 60
+          );
+
+          // Restart timer with new interval
+          startRotationTimer();
+        } else {
+          console.log(
+            `Rotation interval unchanged: ${imageRotationInterval / 1000}s`
+          );
+
+          // If no timer is running, start one
+          if (!scheduledRotation) {
+            startRotationTimer();
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching rotation interval:", error);
@@ -377,6 +421,10 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        // Calculate new interval in milliseconds
+        const newInterval = (hours * 60 * 60 + minutes * 60 + seconds) * 1000;
+        console.log(`Sending new interval request: ${newInterval / 1000}s`);
+
         // Send update to server
         const response = await fetch("/api/rotation-interval", {
           method: "POST",
@@ -393,7 +441,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (response.ok) {
           const data = await response.json();
-          imageRotationInterval = data.interval;
+          // Update local interval
+          imageRotationInterval = newInterval;
+          console.log(
+            `Server confirmed new interval: ${imageRotationInterval / 1000}s`
+          );
 
           // Restart timer with new interval
           startRotationTimer();
