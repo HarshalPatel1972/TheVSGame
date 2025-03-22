@@ -337,7 +337,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Update display with all data
     updateDisplay();
+
+    // Initialize mobile image optimization
+    if (window.innerWidth <= 768) {
+      optimizeMobileImages();
+    }
   }
+
+  // Function to optimize images for mobile
+  function optimizeMobileImages() {
+    // Mobile image optimization
+    const isMobile = window.innerWidth <= 768;
+    const isLandscape = window.innerWidth > window.innerHeight;
+
+    if (isMobile) {
+      // Set appropriate background-position based on device orientation
+      if (isLandscape) {
+        bbBackground.style.backgroundPosition = "center center";
+        gotBackground.style.backgroundPosition = "center center";
+      } else {
+        // Portrait mode
+        if (window.innerWidth < 361) {
+          // Very small screens
+          bbBackground.style.backgroundPosition = "center 20%";
+          gotBackground.style.backgroundPosition = "center 20%";
+        } else {
+          // Regular mobile
+          bbBackground.style.backgroundPosition = "center 25%";
+          gotBackground.style.backgroundPosition = "center 25%";
+        }
+      }
+    }
+  }
+
+  // Listen for orientation changes
+  window.addEventListener("orientationchange", function () {
+    setTimeout(optimizeMobileImages, 300); // Small delay to allow orientation to complete
+  });
+
+  // Enhanced window resize listener
+  window.addEventListener("resize", function () {
+    updateDisplay();
+    optimizeMobileImages();
+  });
 
   // Image rotation variables
   let imageRotationInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
