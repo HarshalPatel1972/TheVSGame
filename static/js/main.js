@@ -78,100 +78,123 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // Exact tie scenario
     if (bbTotal === gotTotal) {
-      const tieMessages = [
-        "EPIC STANDOFF! It's a tie! Like Tyrion facing the Mountain in trial by combat!",
-        "A perfect balance, like Walter White's chemistry!",
-        "Tied at the moment! 'All ties must be broken' - George R.R. Martin, probably",
-        "It's a draw! Not even Heisenberg's blue could tip these scales!",
-        "The battle is as balanced as the Iron Throne is sharp!",
-      ];
       winnerStatus.textContent =
-        tieMessages[Math.floor(Math.random() * tieMessages.length)];
+        "EPIC STANDOFF! The battle is perfectly balanced, like Walter White's chemistry!";
       winnerStatus.className = "winner-status tie";
+      return;
+    }
+
+    // Determine which show is leading
+    const leader = bbTotal > gotTotal ? "Breaking Bad" : "Game of Thrones";
+    let messageClass = bbTotal > gotTotal ? "bb-winning" : "got-winning";
+
+    // Get a fixed message based on the difference level
+    let message = getStatusMessageByLevel(leader, diff);
+
+    // Update the status
+    winnerStatus.textContent = message;
+    winnerStatus.className = `winner-status ${messageClass}`;
+  }
+
+  // Function to get status message based on discrete levels of difference
+  function getStatusMessageByLevel(leader, diff) {
+    // Define the difference thresholds for each level
+    const levels = [
+      { threshold: 10, intensity: "barely" },
+      { threshold: 50, intensity: "slightly" },
+      { threshold: 100, intensity: "notably" },
+      { threshold: 250, intensity: "clearly" },
+      { threshold: 500, intensity: "strongly" },
+      { threshold: 1000, intensity: "dominantly" },
+      { threshold: 2500, intensity: "overwhelmingly" },
+      { threshold: 5000, intensity: "crushingly" },
+    ];
+
+    // Find the appropriate level based on the difference
+    let level = levels.find(
+      (level, index) => diff <= level.threshold || index === levels.length - 1
+    );
+
+    // If difference exceeds all thresholds, use the highest level
+    if (!level) {
+      level = levels[levels.length - 1];
+    }
+
+    // Get themed message based on leader and intensity level
+    if (leader === "Breaking Bad") {
+      return getBBMessage(diff, level.intensity);
     } else {
-      const leader = bbTotal > gotTotal ? "Breaking Bad" : "Game of Thrones";
+      return getGOTMessage(diff, level.intensity);
+    }
+  }
 
-      // Breaking Bad themed messages for different lead sizes
-      const bbSmallLeadMessages = [
-        "Breaking Bad takes the lead! 'I am the one who knocks!'",
-        "Heisenberg is winning by a small margin! 'Say my name!'",
-        "Jesse Pinkman would say 'Breaking Bad is winning, yo!'",
-        "Breaking Bad has the advantage! 'Science, b*tch!'",
-        "Walter White's empire is growing! ${diff} points ahead!",
-      ];
+  // Breaking Bad themed messages by intensity level
+  function getBBMessage(diff, intensity) {
+    const formattedDiff = new Intl.NumberFormat().format(Math.floor(diff));
 
-      const bbMediumLeadMessages = [
-        "Breaking Bad is cooking up a solid lead! ${diff} points ahead!",
-        "Team Heisenberg is dominating! 'I am the danger!'",
-        "Breaking Bad is ahead by ${diff}! The blue stuff is selling fast!",
-        "Breaking Bad commands a ${diff} point lead! 'I did it for me. I liked it.'",
-        "Team Walter White is ruling with a ${diff} point advantage! 'Apply yourself!'",
-      ];
+    switch (intensity) {
+      case "barely":
+        return `Breaking Bad edges ahead with a ${formattedDiff} point lead. The chemistry is just beginning.`;
 
-      const bbLargeLeadMessages = [
-        "BREAKING BAD IS UNSTOPPABLE! ${diff} POINTS AHEAD! 'I AM THE ONE WHO KNOCKS!'",
-        "HEISENBERG'S EMPIRE REIGNS SUPREME with a MASSIVE ${diff} point lead!",
-        "BREAKING BAD IS ABSOLUTELY CRUSHING IT! 'I AM THE DANGER!' +${diff} POINTS!",
-        "WALTER WHITE HAS BUILT AN EMPIRE! ${diff} points of pure Blue Sky advantage!",
-        "BREAKING BAD DOMINATES THE BATTLEFIELD! Gus Fring would be impressed! +${diff} POINTS!",
-      ];
+      case "slightly":
+        return `Breaking Bad is ${formattedDiff} points ahead. Jesse would say "This is the way, yo!"`;
 
-      // Game of Thrones themed messages for different lead sizes
-      const gotSmallLeadMessages = [
-        "Game of Thrones claims the lead! 'Winter is Coming!'",
-        "Game of Thrones is ahead by ${diff} points! 'The North Remembers!'",
-        "House Stark takes a narrow lead! ${diff} points of advantage!",
-        "Game of Thrones holds the Iron Throne with a ${diff} point lead!",
-        "Game of Thrones is winning! 'Valar Morghulis!'",
-      ];
+      case "notably":
+        return `Breaking Bad leads by ${formattedDiff} points. "I am the one who knocks!"`;
 
-      const gotMediumLeadMessages = [
-        "Game of Thrones commands a strong lead! 'A Lannister always pays his debts!'",
-        "Team Targaryen is ahead by ${diff}! 'Dracarys!'",
-        "Game of Thrones is winning by ${diff} points! 'Chaos is a ladder!'",
-        "The Seven Kingdoms rule with a ${diff} point advantage!",
-        "Game of Thrones marches forward with ${diff} points! 'Bend the knee!'",
-      ];
+      case "clearly":
+        return `Breaking Bad is ahead by ${formattedDiff} points. Walter White's empire is growing!`;
 
-      const gotLargeLeadMessages = [
-        "GAME OF THRONES IS ABSOLUTELY DOMINATING! ${diff} POINTS! 'DRACARYS!'",
-        "DAENERYS AND HER DRAGONS REIGN SUPREME with a COLOSSAL ${diff} point lead!",
-        "GAME OF THRONES CONQUERS ALL! The Iron Throne stands ${diff} points tall!",
-        "GAME OF THRONES IS UNSTOPPABLE! 'THE NORTH REMEMBERS' +${diff} POINTS!",
-        "GAME OF THRONES CLAIMS VICTORY LIKE THE BATTLE OF THE BASTARDS! +${diff} POINTS!",
-      ];
+      case "strongly":
+        return `Breaking Bad commands a ${formattedDiff} point lead! "Say my name!"`;
 
-      let messageArray;
+      case "dominantly":
+        return `Breaking Bad is DOMINATING with a ${formattedDiff} point advantage! The blue stuff is selling fast!`;
 
-      // Select the appropriate message array based on the leader and lead size
-      if (leader === "Breaking Bad") {
-        if (diff > 1000) {
-          messageArray = bbLargeLeadMessages;
-        } else if (diff > 300) {
-          messageArray = bbMediumLeadMessages;
-        } else {
-          messageArray = bbSmallLeadMessages;
-        }
-      } else {
-        if (diff > 1000) {
-          messageArray = gotLargeLeadMessages;
-        } else if (diff > 300) {
-          messageArray = gotMediumLeadMessages;
-        } else {
-          messageArray = gotSmallLeadMessages;
-        }
-      }
+      case "overwhelmingly":
+        return `BREAKING BAD CRUSHES with a MASSIVE ${formattedDiff} POINT LEAD! "I AM THE DANGER!"`;
 
-      // Select a random message from the array and replace ${diff} with the formatted difference
-      let message =
-        messageArray[Math.floor(Math.random() * messageArray.length)];
-      message = message.replace(/\$\{diff\}/g, bbCounter.formatNumber(diff));
+      case "crushingly":
+        return `BREAKING BAD REIGNS SUPREME! A STAGGERING ${formattedDiff} POINT EMPIRE! HEISENBERG'S VICTORY IS ABSOLUTE!`;
 
-      winnerStatus.textContent = message;
-      winnerStatus.className = `winner-status ${
-        bbTotal > gotTotal ? "bb-winning" : "got-winning"
-      }`;
+      default:
+        return `Breaking Bad leads by ${formattedDiff} points.`;
+    }
+  }
+
+  // Game of Thrones themed messages by intensity level
+  function getGOTMessage(diff, intensity) {
+    const formattedDiff = new Intl.NumberFormat().format(Math.floor(diff));
+
+    switch (intensity) {
+      case "barely":
+        return `Game of Thrones edges ahead with a ${formattedDiff} point lead. The game has just begun.`;
+
+      case "slightly":
+        return `Game of Thrones is ${formattedDiff} points ahead. "The North Remembers!"`;
+
+      case "notably":
+        return `Game of Thrones leads by ${formattedDiff} points. Winter is definitely coming!`;
+
+      case "clearly":
+        return `Game of Thrones is ahead by ${formattedDiff} points. "Chaos is a ladder."`;
+
+      case "strongly":
+        return `Game of Thrones commands a ${formattedDiff} point lead! "A Lannister always pays his debts."`;
+
+      case "dominantly":
+        return `Game of Thrones is DOMINATING with a ${formattedDiff} point advantage! "Bend the knee!"`;
+
+      case "overwhelmingly":
+        return `GAME OF THRONES CRUSHES with a MASSIVE ${formattedDiff} POINT LEAD! "DRACARYS!"`;
+
+      case "crushingly":
+        return `GAME OF THRONES REIGNS SUPREME! A STAGGERING ${formattedDiff} POINT CONQUEST! THE IRON THRONE STANDS UNCHALLENGED!`;
+
+      default:
+        return `Game of Thrones leads by ${formattedDiff} points.`;
     }
   }
 
