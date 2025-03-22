@@ -202,19 +202,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (response.ok) {
-          // Clear local storage for personal scores
-          localStorage.clear();
-
-          // Reset personal scores in memory
-          bbCounter.personalScore = 0;
-          gotCounter.personalScore = 0;
-
-          // Show reset success message
-          alert("All counters have been reset successfully!");
+          // The personal scores will be reset on the server
+          // We need to refetch our personal scores
+          await bbCounter.fetchPersonalScores();
+          await gotCounter.fetchPersonalScores();
 
           // Refresh counters from server
           await fetchCounters();
           updateDisplay();
+
+          // Show reset success message
+          alert("All counters have been reset successfully!");
 
           // Close modal
           authModal.style.display = "none";
@@ -249,13 +247,17 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Initial fetch and display
-  fetchCounters();
+  async function initialize() {
+    // First, fetch personal scores for each counter
+    await bbCounter.fetchPersonalScores();
+    await gotCounter.fetchPersonalScores();
 
-  // Update display every second with fresh data from server
-  setInterval(fetchCounters, 1000);
+    // Then fetch global counters
+    await fetchCounters();
 
-  // Add window resize listener to update layout when orientation changes
-  window.addEventListener("resize", updateDisplay);
+    // Update display with all data
+    updateDisplay();
+  }
 
   // Image rotation variables
   let imageRotationInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
@@ -713,4 +715,13 @@ document.addEventListener("DOMContentLoaded", () => {
   cancelTimer.addEventListener("click", () => {
     authModal.style.display = "none";
   });
+
+  // Replace the initial fetchCounters call with our initialize function
+  initialize();
+
+  // Update display every second with fresh data from server
+  setInterval(fetchCounters, 1000);
+
+  // Add window resize listener to update layout when orientation changes
+  window.addEventListener("resize", updateDisplay);
 });

@@ -7,6 +7,7 @@ from shutil import copyfile
 from threading import Lock, Thread
 import atexit
 import random
+import uuid
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,6 +17,9 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev_key_for_testing")
 
 # Path for persistent counter storage
 COUNTER_FILE = os.path.join(os.path.dirname(__file__), 'counters.json')
+
+# Path for personal scores storage
+PERSONAL_SCORES_FILE = os.path.join(os.path.dirname(__file__), 'personal_scores.json')
 
 # Path for feedback storage
 FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), 'feedback.json')
@@ -32,7 +36,11 @@ counters = {
     }
 }
 
+# Personal scores storage
+personal_scores = {}  # Format: {device_id: {'breaking_bad': score, 'game_of_thrones': score}}
+
 counter_lock = Lock()  # To prevent race conditions
+personal_scores_lock = Lock()  # Lock for personal scores
 
 # Add a reset timestamp to track when counters were last reset
 LAST_RESET_TIME = int(time.time())
@@ -69,13 +77,20 @@ def save_rotation_config():
 
 # Load saved counters if they exist
 def load_counters():
+    global counters, LAST_RESET_TIME
     try:
         if os.path.exists(COUNTER_FILE):
             with open(COUNTER_FILE, 'r') as f:
                 saved_data = json.load(f)
-                for show in counters.keys():
-                    if show in saved_data:
-                        counters[show]['total'] = saved_data[show]['total']
+                if 'counters' in saved_data:
+                    for show in counters.keys():
+                        if show in saved_data['counters']:
+                            counters[show]['total'] = saved_data['counters'][show]['total']
+                
+                # Load reset timestamp if available
+                if 'last_reset_time' in saved_data:
+                    LAST_RESET_TIME = saved_data['last_reset_time']
+                
                 print(f"Loaded counters from {COUNTER_FILE}")
     except Exception as e:
         print(f"Error loading counters: {e}")
@@ -83,13 +98,36 @@ def load_counters():
 # Save counters to persistent storage
 def save_counters():
     try:
-        data_to_save = {}
+        data_to_save = {
+            'counters': {},
+            'last_reset_time': LAST_RESET_TIME
+        }
         for show in counters:
-            data_to_save[show] = {'total': counters[show]['total']}
+            data_to_save['counters'][show] = {'total': counters[show]['total']}
+        
         with open(COUNTER_FILE, 'w') as f:
             json.dump(data_to_save, f)
     except Exception as e:
         print(f"Error saving counters: {e}")
+
+# Load saved personal scores if they exist
+def load_personal_scores():
+    global personal_scores
+    try:
+        if os.path.exists(PERSONAL_SCORES_FILE):
+            with open(PERSONAL_SCORES_FILE, 'r') as f:
+                personal_scores = json.load(f)
+                print(f"Loaded personal scores from {PERSONAL_SCORES_FILE}")
+    except Exception as e:
+        print(f"Error loading personal scores: {e}")
+
+# Save personal scores to persistent storage
+def save_personal_scores():
+    try:
+        with open(PERSONAL_SCORES_FILE, 'w') as f:
+            json.dump(personal_scores, f)
+    except Exception as e:
+        print(f"Error saving personal scores: {e}")
 
 # Periodic save function
 def periodic_save():
@@ -97,6 +135,8 @@ def periodic_save():
         time.sleep(60)  # Save every minute
         with counter_lock:
             save_counters()
+        with personal_scores_lock:
+            save_personal_scores()
 
 # Load saved feedback if exists
 def load_feedback():
@@ -154,23 +194,63 @@ def get_counters():
             'last_reset_time': LAST_RESET_TIME  # Add reset timestamp to response
         })
 
+@app.route('/api/personal-scores/<device_id>', methods=['GET'])
+def get_personal_scores(device_id):
+    """Get personal scores for a specific device"""
+    with personal_scores_lock:
+        if device_id not in personal_scores:
+            # Initialize new device with zero scores
+            personal_scores[device_id] = {
+                'breaking_bad': 0,
+                'game_of_thrones': 0
+            }
+            save_personal_scores()
+            
+        return jsonify({
+            'scores': personal_scores[device_id],
+            'last_reset_time': LAST_RESET_TIME
+        })
+
 @app.route('/api/increment/<show>', methods=['POST'])
 def increment_counter(show):
     """Increment counter for a specific show"""
     if show not in ['breaking_bad', 'game_of_thrones']:
         return jsonify({'error': 'Invalid show'}), 400
     
-    with counter_lock:
-        counters[show]['total'] += 1
-        counters[show]['clicks'].append(time.time())
+    try:
+        data = request.get_json() or {}
+        device_id = data.get('device_id', '')
         
-        # Save counters after every 10 increments to reduce disk I/O
-        if counters[show]['total'] % 10 == 0:
-            save_counters()
+        with counter_lock:
+            counters[show]['total'] += 1
+            counters[show]['clicks'].append(time.time())
             
+            # Save counters after every 10 increments to reduce disk I/O
+            if counters[show]['total'] % 10 == 0:
+                save_counters()
+        
+        # If device ID is provided, update personal score
+        if device_id:
+            with personal_scores_lock:
+                if device_id not in personal_scores:
+                    personal_scores[device_id] = {
+                        'breaking_bad': 0,
+                        'game_of_thrones': 0
+                    }
+                
+                personal_scores[device_id][show] += 1
+                
+                # Save personal scores after every 5 increments
+                if personal_scores[device_id][show] % 5 == 0:
+                    save_personal_scores()
+                
         return jsonify({
-            'total': counters[show]['total']
+            'total': counters[show]['total'],
+            'personal_score': personal_scores.get(device_id, {}).get(show, 0) if device_id else None
         })
+    except Exception as e:
+        app.logger.error(f"Error in increment endpoint: {e}")
+        return jsonify({'error': 'Server error during increment'}), 500
 
 @app.route('/api/reset', methods=['POST'])
 def reset_counters():
@@ -183,12 +263,13 @@ def reset_counters():
             return jsonify({'error': 'Missing authorization code'}), 400
         
         admin_code = data.get('code')
+        reset_personal = data.get('reset_personal', True)  # Default to resetting personal scores
         
         # Verify the admin code
         if admin_code != "RETRIBUTION":
             return jsonify({'error': 'Invalid authorization code'}), 403
         
-        # Reset all counters if authorized
+        # Reset global counters
         with counter_lock:
             for show in counters:
                 counters[show]['total'] = 0
@@ -199,12 +280,20 @@ def reset_counters():
             
             # Save the reset state to persistent storage
             save_counters()
+        
+        # Reset personal scores if requested
+        if reset_personal:
+            with personal_scores_lock:
+                # Clear all personal scores
+                personal_scores.clear()
+                save_personal_scores()
             
-            return jsonify({
-                'success': True, 
-                'message': 'All counters have been reset',
-                'last_reset_time': LAST_RESET_TIME
-            })
+        return jsonify({
+            'success': True, 
+            'message': 'All counters have been reset',
+            'reset_personal': reset_personal,
+            'last_reset_time': LAST_RESET_TIME
+        })
             
     except Exception as e:
         app.logger.error(f"Error in reset endpoint: {e}")
@@ -374,13 +463,15 @@ def get_emailjs_config():
         app.logger.error(f"Error in emailjs-config endpoint: {str(e)}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
-# Register save_counters function to be called on exit
+# Register save functions to be called on exit
 atexit.register(save_counters)
+atexit.register(save_personal_scores)
 
 if __name__ == '__main__':
     try:
         # Load existing counters and configuration
         load_counters()
+        load_personal_scores()
         load_rotation_config()
         
         # Start background save thread
