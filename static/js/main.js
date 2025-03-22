@@ -79,37 +79,94 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (bbTotal === gotTotal) {
-      winnerStatus.textContent = "EPIC STANDOFF! It's a tie!";
+      const tieMessages = [
+        "EPIC STANDOFF! It's a tie! Like Tyrion facing the Mountain in trial by combat!",
+        "A perfect balance, like Walter White's chemistry!",
+        "Tied at the moment! 'All ties must be broken' - George R.R. Martin, probably",
+        "It's a draw! Not even Heisenberg's blue could tip these scales!",
+        "The battle is as balanced as the Iron Throne is sharp!",
+      ];
+      winnerStatus.textContent =
+        tieMessages[Math.floor(Math.random() * tieMessages.length)];
       winnerStatus.className = "winner-status tie";
     } else {
       const leader = bbTotal > gotTotal ? "Breaking Bad" : "Game of Thrones";
-      const verb = [
-        "dominating",
-        "crushing",
-        "ruling",
-        "leading",
-        "conquering",
-      ][Math.floor(Math.random() * 5)];
 
-      // Different messages based on lead size
-      let message;
-      if (diff > 1000) {
-        message = `${leader} is absolutely DOMINATING with a massive ${bbCounter.formatNumber(
-          diff
-        )} point lead!`;
-      } else if (diff > 500) {
-        message = `${leader} is ${verb.toUpperCase()} the battle with ${bbCounter.formatNumber(
-          diff
-        )} points ahead!`;
-      } else if (diff > 100) {
-        message = `${leader} takes the lead by ${bbCounter.formatNumber(
-          diff
-        )} points! Can they be stopped?`;
+      // Breaking Bad themed messages for different lead sizes
+      const bbSmallLeadMessages = [
+        "Breaking Bad takes the lead! 'I am the one who knocks!'",
+        "Heisenberg is winning by a small margin! 'Say my name!'",
+        "Jesse Pinkman would say 'Breaking Bad is winning, yo!'",
+        "Breaking Bad has the advantage! 'Science, b*tch!'",
+        "Walter White's empire is growing! ${diff} points ahead!",
+      ];
+
+      const bbMediumLeadMessages = [
+        "Breaking Bad is cooking up a solid lead! ${diff} points ahead!",
+        "Team Heisenberg is dominating! 'I am the danger!'",
+        "Breaking Bad is ahead by ${diff}! The blue stuff is selling fast!",
+        "Breaking Bad commands a ${diff} point lead! 'I did it for me. I liked it.'",
+        "Team Walter White is ruling with a ${diff} point advantage! 'Apply yourself!'",
+      ];
+
+      const bbLargeLeadMessages = [
+        "BREAKING BAD IS UNSTOPPABLE! ${diff} POINTS AHEAD! 'I AM THE ONE WHO KNOCKS!'",
+        "HEISENBERG'S EMPIRE REIGNS SUPREME with a MASSIVE ${diff} point lead!",
+        "BREAKING BAD IS ABSOLUTELY CRUSHING IT! 'I AM THE DANGER!' +${diff} POINTS!",
+        "WALTER WHITE HAS BUILT AN EMPIRE! ${diff} points of pure Blue Sky advantage!",
+        "BREAKING BAD DOMINATES THE BATTLEFIELD! Gus Fring would be impressed! +${diff} POINTS!",
+      ];
+
+      // Game of Thrones themed messages for different lead sizes
+      const gotSmallLeadMessages = [
+        "Game of Thrones claims the lead! 'Winter is Coming!'",
+        "Game of Thrones is ahead by ${diff} points! 'The North Remembers!'",
+        "House Stark takes a narrow lead! ${diff} points of advantage!",
+        "Game of Thrones holds the Iron Throne with a ${diff} point lead!",
+        "Game of Thrones is winning! 'Valar Morghulis!'",
+      ];
+
+      const gotMediumLeadMessages = [
+        "Game of Thrones commands a strong lead! 'A Lannister always pays his debts!'",
+        "Team Targaryen is ahead by ${diff}! 'Dracarys!'",
+        "Game of Thrones is winning by ${diff} points! 'Chaos is a ladder!'",
+        "The Seven Kingdoms rule with a ${diff} point advantage!",
+        "Game of Thrones marches forward with ${diff} points! 'Bend the knee!'",
+      ];
+
+      const gotLargeLeadMessages = [
+        "GAME OF THRONES IS ABSOLUTELY DOMINATING! ${diff} POINTS! 'DRACARYS!'",
+        "DAENERYS AND HER DRAGONS REIGN SUPREME with a COLOSSAL ${diff} point lead!",
+        "GAME OF THRONES CONQUERS ALL! The Iron Throne stands ${diff} points tall!",
+        "GAME OF THRONES IS UNSTOPPABLE! 'THE NORTH REMEMBERS' +${diff} POINTS!",
+        "GAME OF THRONES CLAIMS VICTORY LIKE THE BATTLE OF THE BASTARDS! +${diff} POINTS!",
+      ];
+
+      let messageArray;
+
+      // Select the appropriate message array based on the leader and lead size
+      if (leader === "Breaking Bad") {
+        if (diff > 1000) {
+          messageArray = bbLargeLeadMessages;
+        } else if (diff > 300) {
+          messageArray = bbMediumLeadMessages;
+        } else {
+          messageArray = bbSmallLeadMessages;
+        }
       } else {
-        message = `${leader} is narrowly winning by ${bbCounter.formatNumber(
-          diff
-        )} points! The battle rages on!`;
+        if (diff > 1000) {
+          messageArray = gotLargeLeadMessages;
+        } else if (diff > 300) {
+          messageArray = gotMediumLeadMessages;
+        } else {
+          messageArray = gotSmallLeadMessages;
+        }
       }
+
+      // Select a random message from the array and replace ${diff} with the formatted difference
+      let message =
+        messageArray[Math.floor(Math.random() * messageArray.length)];
+      message = message.replace(/\$\{diff\}/g, bbCounter.formatNumber(diff));
 
       winnerStatus.textContent = message;
       winnerStatus.className = `winner-status ${
